@@ -38,6 +38,8 @@
 #include "drivers/system.h"
 #include "drivers/time.h"
 
+#include "sensors/gyro.h"
+
 // 10 MHz max SPI frequency
 #define LSM6DSO_MAX_SPI_CLK_HZ 10000000
 
@@ -112,6 +114,21 @@ static void lsm6dsoWriteRegisterBits(const extDevice_t *dev, lsm6dsoRegister_e r
     }
 }
 
+static uint8_t getLsmDlpfBandwidth()
+{
+    switch(gyroConfig()->gyro_hardware_lpf) {
+        case GYRO_HARDWARE_LPF_NORMAL:
+            return LSM6DSO_VAL_CTRL6_C_FTYPE_232HZ;
+        case GYRO_HARDWARE_LPF_OPTION_1:
+            return LSM6DSO_VAL_CTRL6_C_FTYPE_335HZ;
+        case GYRO_HARDWARE_LPF_OPTION_2:
+            return LSM6DSO_VAL_CTRL6_C_FTYPE_609HZ;
+        case GYRO_HARDWARE_LPF_EXPERIMENTAL:
+            return LSM6DSO_VAL_CTRL6_C_FTYPE_609HZ;
+    }
+    return 0;
+}
+
 static void lsm6dsoConfig(gyroDev_t *gyro)
 {
     extDevice_t *dev = &gyro->dev;
@@ -143,7 +160,7 @@ static void lsm6dsoConfig(gyroDev_t *gyro)
 
     // Configure control register 6
     // disable I2C interface; enable gyro LPF1
-    lsm6dsoWriteRegisterBits(dev, LSM6DSO_REG_CTRL6_C, LSM6DSO_MASK_CTRL6_C, (LSM6DSO_VAL_CTRL6_C_XL_HM_MODE | LSM6DSO_VAL_CTRL6_C_FTYPE_335HZ), 1);
+    lsm6dsoWriteRegisterBits(dev, LSM6DSO_REG_CTRL6_C, LSM6DSO_MASK_CTRL6_C, (LSM6DSO_VAL_CTRL6_C_XL_HM_MODE | getLsmDlpfBandwidth()), 1);
 
     // Configure control register 9
     // disable I3C interface
