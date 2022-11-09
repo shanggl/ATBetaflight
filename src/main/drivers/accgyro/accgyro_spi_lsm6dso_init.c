@@ -20,6 +20,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "platform.h"
 
@@ -33,6 +35,7 @@
 #include "drivers/io_impl.h"
 #include "drivers/nvic.h"
 #include "drivers/sensor.h"
+#include "drivers/system.h"
 #include "drivers/time.h"
 
 // 10 MHz max SPI frequency
@@ -147,7 +150,7 @@ static void lsm6dsoConfig(gyroDev_t *gyro)
     lsm6dsoWriteRegisterBits(dev, LSM6DSO_REG_CTRL9_XL, LSM6DSO_MASK_CTRL9_XL, LSM6DSO_VAL_CTRL9_XL_I3C_DISABLE, 1);
 }
 
-#if defined(USE_GYRO_EXTI) && defined(USE_MPU_DATA_READY_SIGNAL)
+#ifdef USE_GYRO_EXTI
 static void lsm6dsoIntExtiInit(gyroDev_t *gyro)
 {
     if (gyro->mpuIntExtiTag == IO_TAG_NONE) {
@@ -169,7 +172,7 @@ static void lsm6dsoSpiGyroInit(gyroDev_t *gyro)
 
     lsm6dsoConfig(gyro);
 
-#if defined(USE_GYRO_EXTI) && defined(USE_MPU_DATA_READY_SIGNAL)
+#ifdef USE_GYRO_EXTI
     lsm6dsoIntExtiInit(gyro);
 #endif
 
