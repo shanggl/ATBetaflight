@@ -67,10 +67,15 @@ typedef enum {
     LSM6DSO_VAL_CTRL4_C_I2C_DISABLE = BIT(2), // (bit 2) disable I2C interface
     LSM6DSO_VAL_CTRL4_C_LPF1_SEL_G = BIT(1),  // (bit 1) enable gyro LPF1
     LSM6DSO_VAL_CTRL6_C_XL_HM_MODE = 0,       // (bit 4) enable accelerometer high performance mode
-    LSM6DSO_VAL_CTRL6_C_FTYPE_335HZ = 0x00,   // (bits 2:0) gyro LPF1 cutoff 335.5hz
-    LSM6DSO_VAL_CTRL6_C_FTYPE_232HZ = 0x01,   // (bits 2:0) gyro LPF1 cutoff 232.0hz
-    LSM6DSO_VAL_CTRL6_C_FTYPE_171HZ = 0x02,   // (bits 2:0) gyro LPF1 cutoff 171.1hz
-    LSM6DSO_VAL_CTRL6_C_FTYPE_609HZ = 0x03,   // (bits 2:0) gyro LPF1 cutoff 609.0hz
+    LSM6DSO_VAL_CTRL6_C_FTYPE_335HZ = 0x00,   // (bits 2:0) gyro LPF1 cutoff 335.5Hz
+    LSM6DSO_VAL_CTRL6_C_FTYPE_232HZ = 0x01,   // (bits 2:0) gyro LPF1 cutoff 232.0Hz
+    LSM6DSO_VAL_CTRL6_C_FTYPE_171HZ = 0x02,   // (bits 2:0) gyro LPF1 cutoff 171.1Hz
+    LSM6DSO_VAL_CTRL6_C_FTYPE_609HZ = 0x03,   // (bits 2:0) gyro LPF1 cutoff 609.0Hz
+    LSM6DSO_VAL_CTRL7_G_HP_EN_G = BIT(6),   // (bit 6) enable gyro high-pass filter
+    LSM6DSO_VAL_CTRL7_G_HPM_G_16 = 0x00,      // (bits 5:4) gyro HPF cutoff 16mHz
+    LSM6DSO_VAL_CTRL7_G_HPM_G_65 = 0x01,      // (bits 5:4) gyro HPF cutoff 65mHz
+    LSM6DSO_VAL_CTRL7_G_HPM_G_260 = 0x02,     // (bits 5:4) gyro HPF cutoff 260mHz
+    LSM6DSO_VAL_CTRL7_G_HPM_G_1040 = 0x03,    // (bits 5:4) gyro HPF cutoff 1.04Hz
     LSM6DSO_VAL_CTRL9_XL_I3C_DISABLE = BIT(1),// (bit 1) disable I3C interface
 } lsm6dsoConfigValues_e;
 
@@ -80,6 +85,7 @@ typedef enum {
     LSM6DSO_MASK_CTRL3_C_RESET = BIT(0), // 0b00000001
     LSM6DSO_MASK_CTRL4_C = 0x06,         // 0b00000110
     LSM6DSO_MASK_CTRL6_C = 0x17,         // 0b00010111
+    LSM6DSO_MASK_CTRL7_G = 0x70,         // 0b01110000
     LSM6DSO_MASK_CTRL9_XL = 0x02,        // 0b00000010
 } lsm6dsoConfigMasks_e;
 
@@ -161,6 +167,9 @@ static void lsm6dsoConfig(gyroDev_t *gyro)
     // Configure control register 6
     // disable I2C interface; enable gyro LPF1
     lsm6dsoWriteRegisterBits(dev, LSM6DSO_REG_CTRL6_C, LSM6DSO_MASK_CTRL6_C, (LSM6DSO_VAL_CTRL6_C_XL_HM_MODE | getLsmDlpfBandwidth()), 1);
+
+    // Configure control register 7
+    lsm6dsoWriteRegisterBits(dev, LSM6DSO_REG_CTRL7_G, LSM6DSO_MASK_CTRL7_G, (LSM6DSO_VAL_CTRL7_G_HP_EN_G | LSM6DSO_VAL_CTRL7_G_HPM_G_16), 1);
 
     // Configure control register 9
     // disable I3C interface
