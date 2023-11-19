@@ -262,7 +262,7 @@ static void idleTasks()
 // Very similar to maghold function on betaflight/cleanflight
 static void setBearing(int16_t desiredHeading)
 {
-    float errorAngle = (attitude.values.yaw / 10.0f) - desiredHeading;
+    float errorAngle = (attitude.values.yaw - (float)desiredHeading) / 10.0f ;
 
     // Determine the most efficient direction to rotate
     if (errorAngle <= -180) {
