@@ -768,6 +768,8 @@ static void updateGpsIndicator(timeUs_t currentTimeUs)
 
 void gpsUpdate(timeUs_t currentTimeUs)
 {
+    static uint8_t counter = 0;
+    ++counter;
     static gpsState_e gpsStateDurationUs[GPS_STATE_COUNT];
     timeUs_t executeTimeUs;
     gpsState_e gpsCurrentState = gpsData.state;
@@ -777,17 +779,22 @@ void gpsUpdate(timeUs_t currentTimeUs)
         while (serialRxBytesWaiting(gpsPort)) {
             if (cmpTimeUs(micros(), currentTimeUs) > GPS_MAX_WAIT_DATA_RX) {
                 // Wait 1ms and come back
-                rescheduleTask(TASK_SELF, TASK_PERIOD_HZ(TASK_GPS_RATE_FAST));
+                //rescheduleTask(TASK_SELF, TASK_PERIOD_HZ(TASK_GPS_RATE_FAST));
                 return;
             }
             gpsNewData(serialRead(gpsPort));
         }
         // Restore default task rate
-        rescheduleTask(TASK_SELF, TASK_PERIOD_HZ(TASK_GPS_RATE));
+        //rescheduleTask(TASK_SELF, TASK_PERIOD_HZ(TASK_GPS_RATE));
    } else if (GPS_update & GPS_MSP_UPDATE) { // GPS data received via MSP
         gpsSetState(GPS_STATE_RECEIVING_DATA);
         onGpsNewData();
         GPS_update &= ~GPS_MSP_UPDATE;
+    }
+
+    //exec for every 1/10
+    if(counter%10!=0){
+        return;
     }
 
 #if DEBUG_UBLOX_INIT
