@@ -84,6 +84,9 @@ uint16_t GPS_distanceToHome;        // distance to home point in meters
 int16_t GPS_directionToHome;        // direction to home or hol point in degrees
 uint32_t GPS_distanceFlownInCm;     // distance flown since armed in centimeters
 int16_t GPS_verticalSpeedInCmS;     // vertical speed in cm/s
+
+int32_t GPS_prevLoc[2];
+
 float dTnav;             // Delta Time in milliseconds for navigation computations, updated with every good GPS read
 int16_t nav_takeoff_bearing;
 
@@ -757,7 +760,7 @@ void gpsInitHardware(void)
 static void updateGpsIndicator(timeUs_t currentTimeUs)
 {
     static uint32_t GPSLEDTime;
-    if ((int32_t)(currentTimeUs - GPSLEDTime) >= 0 && (gpsSol.numSat >= 5)) {
+    if ((int32_t)(currentTimeUs - GPSLEDTime) >= 0 && (gpsSol.numSat >= GPS_MIN_SAT_COUNT)) {
         GPSLEDTime = currentTimeUs + 150000;
         LED1_TOGGLE;
     }
@@ -765,6 +768,8 @@ static void updateGpsIndicator(timeUs_t currentTimeUs)
 
 void gpsUpdate(timeUs_t currentTimeUs)
 {
+    static uint8_t counter = 0;
+    ++counter;
     static gpsState_e gpsStateDurationUs[GPS_STATE_COUNT];
     timeUs_t executeTimeUs;
     gpsState_e gpsCurrentState = gpsData.state;
@@ -774,17 +779,22 @@ void gpsUpdate(timeUs_t currentTimeUs)
         while (serialRxBytesWaiting(gpsPort)) {
             if (cmpTimeUs(micros(), currentTimeUs) > GPS_MAX_WAIT_DATA_RX) {
                 // Wait 1ms and come back
-                rescheduleTask(TASK_SELF, TASK_PERIOD_HZ(TASK_GPS_RATE_FAST));
+                //rescheduleTask(TASK_SELF, TASK_PERIOD_HZ(TASK_GPS_RATE_FAST));
                 return;
             }
             gpsNewData(serialRead(gpsPort));
         }
         // Restore default task rate
-        rescheduleTask(TASK_SELF, TASK_PERIOD_HZ(TASK_GPS_RATE));
+        //rescheduleTask(TASK_SELF, TASK_PERIOD_HZ(TASK_GPS_RATE));
    } else if (GPS_update & GPS_MSP_UPDATE) { // GPS data received via MSP
         gpsSetState(GPS_STATE_RECEIVING_DATA);
         onGpsNewData();
         GPS_update &= ~GPS_MSP_UPDATE;
+    }
+
+    //exec for every 1/10
+    if(counter%10!=0){
+        return;
     }
 
 #if DEBUG_UBLOX_INIT
@@ -1805,7 +1815,7 @@ static void GPS_calculateDistanceFlownVerticalSpeed(bool initialize)
 void GPS_reset_home_position(void)
 {
     if (!STATE(GPS_FIX_HOME) || !gpsConfig()->gps_set_home_point_once) {
-        if (STATE(GPS_FIX) && gpsSol.numSat >= 5) {
+        if (STATE(GPS_FIX) && gpsSol.numSat >= GPS_MIN_SAT_COUNT) {
             GPS_home[GPS_LATITUDE] = gpsSol.llh.lat;
             GPS_home[GPS_LONGITUDE] = gpsSol.llh.lon;
             GPS_calc_longitude_scaling(gpsSol.llh.lat); // need an initial value for distance and bearing calc
@@ -1834,12 +1844,26 @@ void GPS_distance_cm_bearing(int32_t *currentLat1, int32_t *currentLon1, int32_t
 
 void GPS_calculateDistanceAndDirectionToHome(void)
 {
+    int intervalMs = (int)(dTnav*1000);
+    if(GPS_prevLoc[GPS_LATITUDE]!=0 && GPS_prevLoc[GPS_LONGITUDE]!=0 && intervalMs < 1000 && intervalMs > 0){
+        uint32_t groundDist;
+        int32_t groundDir;
+        GPS_distance_cm_bearing(&GPS_prevLoc[GPS_LATITUDE], &GPS_prevLoc[GPS_LONGITUDE], &gpsSol.llh.lat, &gpsSol.llh.lon, &groundDist, &groundDir);
+        gpsSol.groundCourse = groundDir / 10;
+        gpsSol.groundSpeed = groundDist * 1000 / intervalMs;
+    }else{
+        gpsSol.groundCourse = 0;
+        gpsSol.groundSpeed = 0;
+    }
+    GPS_prevLoc[GPS_LATITUDE]=gpsSol.llh.lat;
+    GPS_prevLoc[GPS_LONGITUDE]=gpsSol.llh.lon;
+
     if (STATE(GPS_FIX_HOME)) {      // If we don't have home set, do not display anything
         uint32_t dist;
         int32_t dir;
         GPS_distance_cm_bearing(&gpsSol.llh.lat, &gpsSol.llh.lon, &GPS_home[GPS_LATITUDE], &GPS_home[GPS_LONGITUDE], &dist, &dir);
         GPS_distanceToHome = dist / 100;
-        GPS_directionToHome = dir / 100;
+        GPS_directionToHome = dir / 10;
     } else {
         GPS_distanceToHome = 0;
         GPS_directionToHome = 0;
@@ -1848,7 +1872,7 @@ void GPS_calculateDistanceAndDirectionToHome(void)
 
 void onGpsNewData(void)
 {
-    if (!(STATE(GPS_FIX) && gpsSol.numSat >= 5)) {
+    if (!(STATE(GPS_FIX) && gpsSol.numSat >= GPS_MIN_SAT_COUNT)) {
         return;
     }
 
