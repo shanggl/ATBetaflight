@@ -98,6 +98,7 @@
 #include "flight/pid.h"
 #include "flight/pid_init.h"
 #include "flight/servos.h"
+#include "flight/position.h"
 
 #include "io/asyncfatfs/asyncfatfs.h"
 #include "io/beeper.h"
@@ -830,6 +831,7 @@ void init(void)
 #ifdef USE_BARO
     baroStartCalibration();
 #endif
+    positionInit();
 
 #if defined(USE_VTX_COMMON) || defined(USE_VTX_CONTROL)
     vtxTableInit();

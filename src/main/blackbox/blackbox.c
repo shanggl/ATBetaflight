@@ -1100,7 +1100,7 @@ static void loadMainState(timeUs_t currentTimeUs)
     blackboxCurrent->amperageLatest = getAmperageLatest();
 
 #ifdef USE_BARO
-    blackboxCurrent->baroAlt = baro.BaroAlt;
+    blackboxCurrent->baroAlt = baro.altitude;
 #endif
 
 #ifdef USE_RANGEFINDER
