@@ -218,7 +218,7 @@ static uint16_t getTemperature()
     uint16_t temperature = gyroGetTemperature() * 10;
 #if defined(USE_BARO)
     if (sensors(SENSOR_BARO)) {
-        temperature = (uint16_t) ((baro.baroTemperature + 50) / 10);
+        temperature = (uint16_t) ((baro.temperature + 50) / 10);
     }
 #endif
     return temperature + IBUS_TEMPERATURE_OFFSET;
@@ -423,10 +423,10 @@ static void setValue(uint8_t* bufferPtr, uint8_t sensorType, uint8_t length)
 #ifdef USE_BARO
         case IBUS_SENSOR_TYPE_ALT:
         case IBUS_SENSOR_TYPE_ALT_MAX:
-            value.int32 = baro.BaroAlt;
+            value.int32 = baro.altitude;
             break;
         case IBUS_SENSOR_TYPE_PRES:
-            value.uint32 = baro.baroPressure | (((uint32_t)getTemperature()) << 19);
+            value.uint32 = baro.pressure | (((uint32_t)getTemperature()) << 19);
             break;
 #endif
 #endif //defined(TELEMETRY_IBUS_EXTENDED)
