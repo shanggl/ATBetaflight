@@ -85,9 +85,12 @@ int16_t GPS_directionToHome;        // direction to home or hol point in degrees
 uint32_t GPS_distanceFlownInCm;     // distance flown since armed in centimeters
 int16_t GPS_verticalSpeedInCmS;     // vertical speed in cm/s
 
+#define GPS_COURSE_CALC
+#ifdef GPS_COURSE_CALC
 int32_t GPS_prevLoc[2];
+#endif
 
-float dTnav;             // Delta Time in milliseconds for navigation computations, updated with every good GPS read
+float dTnav;             // Delta Time in seconds for navigation computations, updated with every good GPS read
 int16_t nav_takeoff_bearing;
 
 #define GPS_DISTANCE_FLOWN_MIN_SPEED_THRESHOLD_CM_S 15 // 5.4Km/h 3.35mph
@@ -1844,19 +1847,23 @@ void GPS_distance_cm_bearing(int32_t *currentLat1, int32_t *currentLon1, int32_t
 
 void GPS_calculateDistanceAndDirectionToHome(void)
 {
+
+#ifdef GPS_COURSE_CALC
     int intervalMs = (int)(dTnav*1000);
     if(GPS_prevLoc[GPS_LATITUDE]!=0 && GPS_prevLoc[GPS_LONGITUDE]!=0 && intervalMs < 1000 && intervalMs > 0){
         uint32_t groundDist;
         int32_t groundDir;
         GPS_distance_cm_bearing(&GPS_prevLoc[GPS_LATITUDE], &GPS_prevLoc[GPS_LONGITUDE], &gpsSol.llh.lat, &gpsSol.llh.lon, &groundDist, &groundDir);
         gpsSol.groundCourse = groundDir / 10;
-        gpsSol.groundSpeed = groundDist * 1000 / intervalMs;
+        //use gps speed from gps data
+        //gpsSol.groundSpeed = groundDist * 1000 / intervalMs;
     }else{
-        gpsSol.groundCourse = 0;
-        gpsSol.groundSpeed = 0;
+        //gpsSol.groundCourse = 0;
+        //gpsSol.groundSpeed = 0;
     }
     GPS_prevLoc[GPS_LATITUDE]=gpsSol.llh.lat;
     GPS_prevLoc[GPS_LONGITUDE]=gpsSol.llh.lon;
+#endif
 
     if (STATE(GPS_FIX_HOME)) {      // If we don't have home set, do not display anything
         uint32_t dist;
