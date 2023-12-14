@@ -81,6 +81,7 @@ static char *gpsPacketLogChar = gpsPacketLog;
 // **********************
 int32_t GPS_home[2];
 uint16_t GPS_distanceToHome;        // distance to home point in meters
+uint32_t GPS_distanceToHomeCm;
 int16_t GPS_directionToHome;        // direction to home or hol point in degrees
 uint32_t GPS_distanceFlownInCm;     // distance flown since armed in centimeters
 int16_t GPS_verticalSpeedInCmS;     // vertical speed in cm/s
@@ -891,7 +892,8 @@ void gpsUpdate(timeUs_t currentTimeUs)
 
 #if defined(USE_GPS_RESCUE)
     if (gpsRescueIsConfigured()) {
-        updateGPSRescueState();
+        //updateGPSRescueState();
+        gpsRescueUpdate();
         minSats = gpsRescueConfig()->minSats;
     }
 #endif
@@ -1865,14 +1867,17 @@ void GPS_calculateDistanceAndDirectionToHome(void)
     GPS_prevLoc[GPS_LONGITUDE]=gpsSol.llh.lon;
 #endif
 
-    if (STATE(GPS_FIX_HOME)) {      // If we don't have home set, do not display anything
+    if (STATE(GPS_FIX_HOME)) {
         uint32_t dist;
         int32_t dir;
         GPS_distance_cm_bearing(&gpsSol.llh.lat, &gpsSol.llh.lon, &GPS_home[GPS_LATITUDE], &GPS_home[GPS_LONGITUDE], &dist, &dir);
-        GPS_distanceToHome = dist / 100;
-        GPS_directionToHome = dir / 10;
+        GPS_distanceToHome = dist / 100; // m
+        GPS_distanceToHomeCm = dist; // cm
+        GPS_directionToHome = dir / 10; // degrees * 10 or decidegrees
     } else {
+        // If we don't have home set, do not display anything
         GPS_distanceToHome = 0;
+        GPS_distanceToHomeCm = 0;
         GPS_directionToHome = 0;
     }
 }
@@ -1899,7 +1904,7 @@ void onGpsNewData(void)
     }
 
 #ifdef USE_GPS_RESCUE
-    rescueNewGpsData();
+    gpsRescueNewGpsData();
 #endif
 }
 
@@ -1912,4 +1917,12 @@ void gpsSetFixState(bool state)
         DISABLE_STATE(GPS_FIX);
     }
 }
+
+
+float getGpsDataIntervalSeconds(void)
+{
+    return dTnav;
+}
+
+
 #endif

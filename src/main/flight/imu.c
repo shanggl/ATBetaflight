@@ -118,10 +118,16 @@ attitudeEulerAngles_t attitude = EULER_INITIALIZE;
 
 PG_REGISTER_WITH_RESET_TEMPLATE(imuConfig_t, imuConfig, PG_IMU_CONFIG, 3);
 
+#ifdef USE_RACE_PRO
+#define DEFAULT_SMALL_ANGLE 180
+#else
+#define DEFAULT_SMALL_ANGLE 25
+#endif
+
 PG_RESET_TEMPLATE(imuConfig_t, imuConfig,
     .imu_dcm_kp = 2500,      // 1.0 * 10000
     .imu_dcm_ki = 0,         // 0.003 * 10000
-    .small_angle = 25,
+    .small_angle = DEFAULT_SMALL_ANGLE,
     .imu_process_denom = 2,
     .mag_declination = 0
 );
@@ -262,9 +268,11 @@ STATIC_UNIT_TESTED void imuMahonyAHRSupdate(float dt, float gx, float gy, float 
     fpVector3_t mag_ef;
     matrixVectorMul(&mag_ef, (const fpMat33_t*)&rMat, &mag_bf); // BF->EF true north
 
+#ifdef USE_GPS_RESCUE
     // Encapsulate additional operations in a block so that it is only executed when the according debug mode is used
     // Only re-calculate magYaw when there is a new Mag data reading, to avoid spikes
-    /*if (debugMode == DEBUG_GPS_RESCUE_HEADING && mag.isNewMagADCFlag) {
+#if 0
+    if (debugMode == DEBUG_GPS_RESCUE_HEADING && mag.isNewMagADCFlag) {
         fpMat33_t rMatZTrans;
         yawToRotationMatrixZ(&rMatZTrans, -atan2_approx(rMat[1][0], rMat[0][0]));
         fpVector3_t mag_ef_yawed;
@@ -278,7 +286,9 @@ STATIC_UNIT_TESTED void imuMahonyAHRSupdate(float dt, float gx, float gy, float 
         // reset new mag data flag to false to initiate monitoring for new Mag data.
         // note that if the debug doesn't run, this reset will not occur, and we won't waste cycles on the comparison
         mag.isNewMagADCFlag = false;
-    }*/
+    }
+#endif
+#endif
 
     if (useMag && magNormSquared > 0.01f) {
         // Normalise magnetometer measurement
