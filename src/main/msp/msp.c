@@ -4234,11 +4234,13 @@ static mspResult_e mspCommonProcessInCommand(mspDescriptor_t srcDesc, int16_t cm
 #ifdef USE_OSD_HD
     case MSP_SET_OSD_CANVAS:
         {
-            osdConfigMutable()->canvas_cols = sbufReadU8(src);
-            osdConfigMutable()->canvas_rows = sbufReadU8(src);
-
-            if ((vcdProfile()->video_system != VIDEO_SYSTEM_HD) ||
+            uint8_t canvas_cols = sbufReadU8(src), canvas_rows = sbufReadU8(src);
+            if ((osdConfig()->canvas_cols != canvas_cols || osdConfig()->canvas_rows != canvas_rows)||
+                (vcdProfile()->video_system != VIDEO_SYSTEM_HD) ||
                 (osdConfig()->displayPortDevice != OSD_DISPLAYPORT_DEVICE_MSP)) {
+                osdConfigMutable()->canvas_cols = canvas_cols;
+                osdConfigMutable()->canvas_rows = canvas_rows;            
+
                 // An HD VTX has communicated it's canvas size, so we must be in HD mode
                 vcdProfileMutable()->video_system = VIDEO_SYSTEM_HD;
                 // And using MSP displayport
