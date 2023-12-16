@@ -774,6 +774,7 @@ void gpsUpdate(timeUs_t currentTimeUs)
 {
     static uint8_t counter = 0;
     ++counter;
+    counter %= 10;
     static gpsState_e gpsStateDurationUs[GPS_STATE_COUNT];
     timeUs_t executeTimeUs;
     gpsState_e gpsCurrentState = gpsData.state;
@@ -797,7 +798,7 @@ void gpsUpdate(timeUs_t currentTimeUs)
     }
 
     //exec for every 1/10
-    if(counter%10!=0){
+    if(counter != 0){
         return;
     }
 
