@@ -341,11 +341,19 @@ static void rescueAttainPosition(void)
         // NB positive pitch setpoint means nose down.
         // target velocity can be very negative leading to large error before the start, with overshoot
 
+        float pmul = 1.0f, imul = 1.0f, dmul = 1.0f, ilimit = 0.5f, vir=rescueState.intent.velocityItermRelax;
+        if(rescueState.phase == RESCUE_FLY_HOME){
+            pmul = 0.1f;
+            imul = 0.25f;
+            dmul = 0.1f;
+            ilimit = 0.8f;//allow larger i term range
+            vir = 1.f;
+        }
         // P component
-        const float velocityP = velocityError * gpsRescueConfig()->velP;
+        const float velocityP = velocityError * gpsRescueConfig()->velP * pmul;
 
         // I component
-        velocityI += 0.01f * gpsRescueConfig()->velI * velocityError * sampleIntervalNormaliseFactor * rescueState.intent.velocityItermRelax;
+        velocityI += 0.01f * gpsRescueConfig()->velI * velocityError * sampleIntervalNormaliseFactor * vir * imul;
         // velocityItermRelax is a time-based factor, 0->1 with time constant of 1s from when we start to fly home
         // avoids excess iTerm accumulation during the initial acceleration phase and during descent.
 
@@ -354,7 +362,7 @@ static void rescueAttainPosition(void)
         // also, if we over-fly the home point, we need to re-accumulate iTerm from zero, not the previously accumulated value
 
         const float pitchAngleLimit = rescueState.intent.pitchAngleLimitDeg * 100.0f;
-        const float velocityILimit = 0.5f * pitchAngleLimit;
+        const float velocityILimit = ilimit * pitchAngleLimit;
         // I component alone cannot exceed half the max pitch angle
         velocityI = constrainf(velocityI, -velocityILimit, velocityILimit);
 
@@ -362,6 +370,7 @@ static void rescueAttainPosition(void)
         float velocityD = ((velocityError - previousVelocityError) / sampleIntervalNormaliseFactor);
         previousVelocityError = velocityError;
         velocityD *= gpsRescueConfig()->velD;
+        velocityD *= dmul;
         DEBUG_SET(DEBUG_GPS_RESCUE_VELOCITY, 5, lrintf(velocityD)); // velocity D before lowpass smoothing
         // smooth the D steps
         const float cutoffHz = rescueState.intent.velocityPidCutoff * rescueState.intent.velocityPidCutoffModifier;
@@ -613,7 +622,11 @@ static void sensorUpdate(void)
 
         DEBUG_SET(DEBUG_ATTITUDE, 5, groundspeedErrorRatio * 100);
 
-        rescueState.intent.velocityItermAttenuator = 4.0f / (groundspeedErrorRatio + 4.0f);
+        if(rescueState.phase == RESCUE_FLY_HOME){
+            rescueState.intent.velocityItermAttenuator = 0.999f;
+        }else{
+            rescueState.intent.velocityItermAttenuator = 4.0f / (groundspeedErrorRatio + 4.0f);
+        }
         // 1 if groundspeedErrorRatio = 0, falling to 2/3 if groundspeedErrorRatio = 2, 0.5 if groundspeedErrorRatio = 4, etc
         // limit (essentially prevent) velocity iTerm accumulation whenever there is a meaningful groundspeed error
         // this is a crude but simple way to prevent iTerm windup when recovering from an IMU error

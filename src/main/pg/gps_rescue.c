@@ -35,7 +35,7 @@ PG_RESET_TEMPLATE(gpsRescueConfig_t, gpsRescueConfig,
 
     .minStartDistM = 15,
     .altitudeMode = GPS_RESCUE_ALT_MODE_MAX,
-    .initialClimbM = 10,
+    .initialClimbM = 30,
     .ascendRate = 750,          // cm/s, for altitude corrections on ascent
 
     .returnAltitudeM = 30,
