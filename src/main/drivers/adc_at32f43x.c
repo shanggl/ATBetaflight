@@ -253,7 +253,7 @@ void adcInit(const adcConfig_t *config)
 	// Configure a pin for ADC
 	if (adcOperatingConfig[i].tag) {
 		IOInit(IOGetByTag(adcOperatingConfig[i].tag), OWNER_ADC_BATT + i, 0);
-		IOConfigGPIO(IOGetByTag(adcOperatingConfig[i].tag), IO_CONFIG(GPIO_MODE_ANALOG,GPIO_DRIVE_STRENGTH_MODERATE, 0, GPIO_PULL_NONE));
+		IOConfigGPIO(IOGetByTag(adcOperatingConfig[i].tag), IO_CONFIG(GPIO_MODE_ANALOG,0, 0, 0));
     	}//end of ioinit
     //前面已经进行了整个adc 的重启，无需单个重启
     }//end of for i in each channel  config the gpio
@@ -363,19 +363,11 @@ void adcInit(const adcConfig_t *config)
 				adc_ordinary_channel_set(adcDevice[dev].ADCx,
 						adcOperatingConfig[adcChan].adcChannel,
 						adcOperatingConfig[adcChan].dmaIndex+1,
-						ADC_SAMPLETIME_92_5);
+						ADC_SAMPLETIME_640_5);
 			}//end of for each channel
 
 
-			if(adc->ADCx==ADC1){
-					/* config voltage_monitoring */
-						adc_voltage_monitor_threshold_value_set(ADC1, 0x100, 0x000);
-						adc_voltage_monitor_single_channel_select(ADC1, adcOperatingConfig[ADC_BATTERY].adcChannel);
-						adc_voltage_monitor_enable(ADC1, ADC_VMONITOR_SINGLE_ORDINARY);
-			}
-
-
-    //enable over flow interupt 
+       //enable over flow interupt 
         adc_interrupt_enable(adc->ADCx, ADC_OCCO_INT, TRUE);
 
         /* adc enable */
