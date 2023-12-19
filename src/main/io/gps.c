@@ -81,13 +81,17 @@ static char *gpsPacketLogChar = gpsPacketLog;
 // **********************
 int32_t GPS_home[2];
 uint16_t GPS_distanceToHome;        // distance to home point in meters
+uint32_t GPS_distanceToHomeCm;
 int16_t GPS_directionToHome;        // direction to home or hol point in degrees
 uint32_t GPS_distanceFlownInCm;     // distance flown since armed in centimeters
 int16_t GPS_verticalSpeedInCmS;     // vertical speed in cm/s
 
+#define GPS_COURSE_CALC
+#ifdef GPS_COURSE_CALC
 int32_t GPS_prevLoc[2];
+#endif
 
-float dTnav;             // Delta Time in milliseconds for navigation computations, updated with every good GPS read
+float dTnav;             // Delta Time in seconds for navigation computations, updated with every good GPS read
 int16_t nav_takeoff_bearing;
 
 #define GPS_DISTANCE_FLOWN_MIN_SPEED_THRESHOLD_CM_S 15 // 5.4Km/h 3.35mph
@@ -770,6 +774,7 @@ void gpsUpdate(timeUs_t currentTimeUs)
 {
     static uint8_t counter = 0;
     ++counter;
+    counter %= 10;
     static gpsState_e gpsStateDurationUs[GPS_STATE_COUNT];
     timeUs_t executeTimeUs;
     gpsState_e gpsCurrentState = gpsData.state;
@@ -793,7 +798,7 @@ void gpsUpdate(timeUs_t currentTimeUs)
     }
 
     //exec for every 1/10
-    if(counter%10!=0){
+    if(counter != 0){
         return;
     }
 
@@ -888,7 +893,8 @@ void gpsUpdate(timeUs_t currentTimeUs)
 
 #if defined(USE_GPS_RESCUE)
     if (gpsRescueIsConfigured()) {
-        updateGPSRescueState();
+        //updateGPSRescueState();
+        gpsRescueUpdate();
         minSats = gpsRescueConfig()->minSats;
     }
 #endif
@@ -1844,28 +1850,35 @@ void GPS_distance_cm_bearing(int32_t *currentLat1, int32_t *currentLon1, int32_t
 
 void GPS_calculateDistanceAndDirectionToHome(void)
 {
+
+#ifdef GPS_COURSE_CALC
     int intervalMs = (int)(dTnav*1000);
     if(GPS_prevLoc[GPS_LATITUDE]!=0 && GPS_prevLoc[GPS_LONGITUDE]!=0 && intervalMs < 1000 && intervalMs > 0){
         uint32_t groundDist;
         int32_t groundDir;
         GPS_distance_cm_bearing(&GPS_prevLoc[GPS_LATITUDE], &GPS_prevLoc[GPS_LONGITUDE], &gpsSol.llh.lat, &gpsSol.llh.lon, &groundDist, &groundDir);
         gpsSol.groundCourse = groundDir / 10;
-        gpsSol.groundSpeed = groundDist * 1000 / intervalMs;
+        //use gps speed from gps data
+        //gpsSol.groundSpeed = groundDist * 1000 / intervalMs;
     }else{
-        gpsSol.groundCourse = 0;
-        gpsSol.groundSpeed = 0;
+        //gpsSol.groundCourse = 0;
+        //gpsSol.groundSpeed = 0;
     }
     GPS_prevLoc[GPS_LATITUDE]=gpsSol.llh.lat;
     GPS_prevLoc[GPS_LONGITUDE]=gpsSol.llh.lon;
+#endif
 
-    if (STATE(GPS_FIX_HOME)) {      // If we don't have home set, do not display anything
+    if (STATE(GPS_FIX_HOME)) {
         uint32_t dist;
         int32_t dir;
         GPS_distance_cm_bearing(&gpsSol.llh.lat, &gpsSol.llh.lon, &GPS_home[GPS_LATITUDE], &GPS_home[GPS_LONGITUDE], &dist, &dir);
-        GPS_distanceToHome = dist / 100;
-        GPS_directionToHome = dir / 10;
+        GPS_distanceToHome = dist / 100; // m
+        GPS_distanceToHomeCm = dist; // cm
+        GPS_directionToHome = dir / 10; // degrees * 10 or decidegrees
     } else {
+        // If we don't have home set, do not display anything
         GPS_distanceToHome = 0;
+        GPS_distanceToHomeCm = 0;
         GPS_directionToHome = 0;
     }
 }
@@ -1892,7 +1905,7 @@ void onGpsNewData(void)
     }
 
 #ifdef USE_GPS_RESCUE
-    rescueNewGpsData();
+    gpsRescueNewGpsData();
 #endif
 }
 
@@ -1905,4 +1918,12 @@ void gpsSetFixState(bool state)
         DISABLE_STATE(GPS_FIX);
     }
 }
+
+
+float getGpsDataIntervalSeconds(void)
+{
+    return dTnav;
+}
+
+
 #endif

@@ -149,6 +149,7 @@
 #define PARAM_NAME_GPS_SET_HOME_POINT_ONCE "gps_set_home_point_once"
 #define PARAM_NAME_GPS_USE_3D_SPEED "gps_use_3d_speed"
 
+
 #ifdef USE_GPS_RESCUE
 #define PARAM_NAME_GPS_RESCUE_MIN_START_DIST "gps_rescue_min_start_dist"
 #define PARAM_NAME_GPS_RESCUE_ALT_MODE "gps_rescue_alt_mode"
@@ -156,10 +157,11 @@
 #define PARAM_NAME_GPS_RESCUE_ASCEND_RATE "gps_rescue_ascend_rate"
 
 #define PARAM_NAME_GPS_RESCUE_RETURN_ALT "gps_rescue_return_alt"
-#define PARAM_NAME_GPS_RESCUE_RETURN_SPEED "gps_rescue_ground_speed"
+#define PARAM_NAME_GPS_RESCUE_GROUND_SPEED "gps_rescue_ground_speed"
 #define PARAM_NAME_GPS_RESCUE_MAX_RESCUE_ANGLE "gps_rescue_max_angle"
 #define PARAM_NAME_GPS_RESCUE_ROLL_MIX "gps_rescue_roll_mix"
 #define PARAM_NAME_GPS_RESCUE_PITCH_CUTOFF "gps_rescue_pitch_cutoff"
+#define PARAM_NAME_GPS_RESCUE_IMU_YAW_GAIN "gps_rescue_imu_yaw_gain"
 
 #define PARAM_NAME_GPS_RESCUE_DESCENT_DIST "gps_rescue_descent_dist"
 #define PARAM_NAME_GPS_RESCUE_DESCEND_RATE "gps_rescue_descend_rate"
@@ -186,4 +188,19 @@
 #define PARAM_NAME_GPS_RESCUE_USE_MAG "gps_rescue_use_mag"
 #endif
 #endif
+
+#ifdef USE_GPS_LAP_TIMER
+#define PARAM_NAME_GPS_LAP_TIMER_GATE_LAT "gps_lap_timer_gate_lat"
+#define PARAM_NAME_GPS_LAP_TIMER_GATE_LON "gps_lap_timer_gate_lon"
+#define PARAM_NAME_GPS_LAP_TIMER_MIN_LAP_TIME "gps_lap_timer_min_lap_time_s"
+#define PARAM_NAME_GPS_LAP_TIMER_GATE_TOLERANCE "gps_lap_timer_gate_tolerance_m"
+#endif // USE_GPS_LAP_TIMER
+#endif
+
+#define PARAM_NAME_IMU_DCM_KP "imu_dcm_kp"
+#define PARAM_NAME_IMU_DCM_KI "imu_dcm_ki"
+#define PARAM_NAME_IMU_SMALL_ANGLE "small_angle"
+#define PARAM_NAME_IMU_PROCESS_DENOM "imu_process_denom"
+#ifdef USE_MAG
+#define PARAM_NAME_IMU_MAG_DECLINATION "mag_declination"
 #endif

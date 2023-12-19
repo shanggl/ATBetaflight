@@ -95,9 +95,11 @@
 #include "flight/failsafe.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
+#include "flight/gps_rescue.h"
 #include "flight/pid.h"
 #include "flight/pid_init.h"
 #include "flight/servos.h"
+#include "flight/position.h"
 
 #include "io/asyncfatfs/asyncfatfs.h"
 #include "io/beeper.h"
@@ -768,6 +770,12 @@ void init(void)
 #ifdef USE_GPS
     if (featureIsEnabled(FEATURE_GPS)) {
         gpsInit();
+#ifdef USE_GPS_RESCUE
+        gpsRescueInit();
+#endif
+#ifdef USE_GPS_LAP_TIMER
+        gpsLapTimerInit();
+#endif // USE_GPS_LAP_TIMER
     }
 #endif
 
@@ -830,6 +838,7 @@ void init(void)
 #ifdef USE_BARO
     baroStartCalibration();
 #endif
+    positionInit();
 
 #if defined(USE_VTX_COMMON) || defined(USE_VTX_CONTROL)
     vtxTableInit();

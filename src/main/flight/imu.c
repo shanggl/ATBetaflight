@@ -118,10 +118,16 @@ attitudeEulerAngles_t attitude = EULER_INITIALIZE;
 
 PG_REGISTER_WITH_RESET_TEMPLATE(imuConfig_t, imuConfig, PG_IMU_CONFIG, 3);
 
+#ifdef USE_RACE_PRO
+#define DEFAULT_SMALL_ANGLE 180
+#else
+#define DEFAULT_SMALL_ANGLE 25
+#endif
+
 PG_RESET_TEMPLATE(imuConfig_t, imuConfig,
     .imu_dcm_kp = 2500,      // 1.0 * 10000
     .imu_dcm_ki = 0,         // 0.003 * 10000
-    .small_angle = 25,
+    .small_angle = DEFAULT_SMALL_ANGLE,
     .imu_process_denom = 2,
     .mag_declination = 0
 );
@@ -224,7 +230,7 @@ STATIC_UNIT_TESTED void imuMahonyAHRSupdate(float dt, float gx, float gy, float 
         // Compute heading vector in EF from scalar CoG. CoG is clockwise from North
         // Note that Earth frame X is pointing north and sin/cos argument is anticlockwise
         const fpVector2_t cog_ef = {.x = cos_approx(-courseOverGround), .y = sin_approx(-courseOverGround)};
-#define THRUST_COG 1
+#define THRUST_COG 0
 #if THRUST_COG
         const fpVector2_t heading_ef = {.x = rMat[X][Z], .y = rMat[Y][Z]};  // body Z axis (up) - direction of thrust vector
 #else
@@ -262,9 +268,11 @@ STATIC_UNIT_TESTED void imuMahonyAHRSupdate(float dt, float gx, float gy, float 
     fpVector3_t mag_ef;
     matrixVectorMul(&mag_ef, (const fpMat33_t*)&rMat, &mag_bf); // BF->EF true north
 
+#ifdef USE_GPS_RESCUE
     // Encapsulate additional operations in a block so that it is only executed when the according debug mode is used
     // Only re-calculate magYaw when there is a new Mag data reading, to avoid spikes
-    /*if (debugMode == DEBUG_GPS_RESCUE_HEADING && mag.isNewMagADCFlag) {
+#if 0
+    if (debugMode == DEBUG_GPS_RESCUE_HEADING && mag.isNewMagADCFlag) {
         fpMat33_t rMatZTrans;
         yawToRotationMatrixZ(&rMatZTrans, -atan2_approx(rMat[1][0], rMat[0][0]));
         fpVector3_t mag_ef_yawed;
@@ -278,7 +286,9 @@ STATIC_UNIT_TESTED void imuMahonyAHRSupdate(float dt, float gx, float gy, float 
         // reset new mag data flag to false to initiate monitoring for new Mag data.
         // note that if the debug doesn't run, this reset will not occur, and we won't waste cycles on the comparison
         mag.isNewMagADCFlag = false;
-    }*/
+    }
+#endif
+#endif
 
     if (useMag && magNormSquared > 0.01f) {
         // Normalise magnetometer measurement
@@ -534,13 +544,28 @@ static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
         useMag = true;
     }
 #endif
+
+    float gyroAverage[XYZ_AXIS_COUNT];
+    for (int axis = 0; axis < XYZ_AXIS_COUNT; ++axis) {
+        gyroAverage[axis] = gyroGetFilteredDownsampled(axis);
+    }
+    float gx = DEGREES_TO_RADIANS(gyroAverage[X]), gy = DEGREES_TO_RADIANS(gyroAverage[Y]),  gz = DEGREES_TO_RADIANS(gyroAverage[Z]);
+
 #if defined(USE_GPS)
     if (!useMag && sensors(SENSOR_GPS) && STATE(GPS_FIX) && gpsSol.numSat > GPS_MIN_SAT_COUNT && gpsSol.groundSpeed >= GPS_COG_MIN_GROUNDSPEED) {
         // Use GPS course over ground to correct attitude.values.yaw
-        const float imuYawGroundspeed = fminf (gpsSol.groundSpeed / GPS_COG_MAX_GROUNDSPEED, 2.0f);
+        float imuYawGroundspeed = fminf (gpsSol.groundSpeed / GPS_COG_MAX_GROUNDSPEED, 2.0f);
         courseOverGround = DECIDEGREES_TO_RADIANS(gpsSol.groundCourse);
-        //cogYawGain = (FLIGHT_MODE(GPS_RESCUE_MODE)) ? gpsRescueGetImuYawCogGain() : imuYawGroundspeed;
-        cogYawGain = imuYawGroundspeed;
+        
+        // Calculate general spin rate (rad/s)
+        float spin_rate = sqrtf(sq(gx) + sq(gy) + sq(gz));
+        //dead zone
+        spin_rate = fmaxf(spin_rate - DEGREES_TO_RADIANS(2), 0.0f);
+        const float maxSpinRateForCogGain = DEGREES_TO_RADIANS(10);
+        float cogGainMul = 1.0f - fminf(spin_rate / maxSpinRateForCogGain, 1.0f);
+        imuYawGroundspeed *= cogGainMul;
+
+        cogYawGain = (FLIGHT_MODE(GPS_RESCUE_MODE)) ? gpsRescueGetImuYawCogGain() : imuYawGroundspeed;
         // normally update yaw heading with GPS data, but when in a Rescue, modify the IMU yaw gain dynamically
         if (shouldInitializeGPSHeading()) {
             // Reset our reference and reinitialize quaternion.
@@ -567,15 +592,11 @@ static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
 //  printf("[imu]deltaT = %u, imuDeltaT = %u, currentTimeUs = %u, micros64_real = %lu\n", deltaT, imuDeltaT, currentTimeUs, micros64_real());
     deltaT = imuDeltaT;
 #endif
-    float gyroAverage[XYZ_AXIS_COUNT];
-    for (int axis = 0; axis < XYZ_AXIS_COUNT; ++axis) {
-        gyroAverage[axis] = gyroGetFilteredDownsampled(axis);
-    }
 
     useAcc = imuIsAccelerometerHealthy(acc.accADC); // all smoothed accADC values are within 20% of 1G
 
     imuMahonyAHRSupdate(deltaT * 1e-6f,
-                        DEGREES_TO_RADIANS(gyroAverage[X]), DEGREES_TO_RADIANS(gyroAverage[Y]), DEGREES_TO_RADIANS(gyroAverage[Z]),
+                        gx,gy,gz,
                         useAcc, acc.accADC[X], acc.accADC[Y], acc.accADC[Z],
                         useMag,
                         cogYawGain, courseOverGround,  imuCalcKpGain(currentTimeUs, useAcc, gyroAverage));
