@@ -67,8 +67,13 @@ uint16_t gyroSetSampleRate(gyroDev_t *gyro)
             } else
 #endif
             {
-                gyro->gyroRateKHz = GYRO_RATE_3200_Hz;
-                gyroSampleRateHz = 3200;
+#if defined(USE_GYRO_EXTI) && defined(GYRO_1_EXTI_PIN)
+            gyro->gyroRateKHz = GYRO_RATE_3200_Hz;
+            gyroSampleRateHz = 3200;
+#else
+            gyro->gyroRateKHz = GYRO_RATE_8_kHz;
+            gyroSampleRateHz = 8000;
+#endif
             }
             accSampleRateHz = 800;
             break;
@@ -105,8 +110,13 @@ uint16_t gyroSetSampleRate(gyroDev_t *gyro)
             accSampleRateHz = 896;
             break;
         case BMI_323_SPI:
+#if defined(USE_GYRO_EXTI) && defined(GYRO_1_EXTI_PIN)
             gyro->gyroRateKHz = GYRO_RATE_3200_Hz;
             gyroSampleRateHz = 3200;
+#else
+            gyro->gyroRateKHz = GYRO_RATE_8_kHz;
+            gyroSampleRateHz = 8000;
+#endif
             accSampleRateHz = 800;
             break;
 
