@@ -126,6 +126,7 @@ typedef struct {
 #define GPS_RESCUE_MAX_THROTTLE_ITERM    200    // max iterm value for throttle in degrees * 100
 #define GPS_RESCUE_ALLOWED_YAW_RANGE   30.0f   // yaw error must be less than this to enter fly home phase, and to pitch during descend()
 
+static int8_t secondsDoingNothing; // Limit on doing nothing
 static float rescueThrottle;
 static float rescueYaw;
 float       gpsRescueAngle[ANGLE_INDEX_COUNT] = { 0, 0 };
@@ -238,9 +239,18 @@ static void rescueAttainPosition(void)
         return;
     case RESCUE_DO_NOTHING:
         // 20s of slow descent for switch induced sanity failures to allow time to recover
+        // 20s of decent with 1100 throttle
+        // 20s of decent with 1000 throttle
+        // then abort
         gpsRescueAngle[AI_PITCH] = 0.0f;
         gpsRescueAngle[AI_ROLL] = 0.0f;
-        rescueThrottle = gpsRescueConfig()->throttleHover - 100;
+        if (secondsDoingNothing < 20) {
+            rescueThrottle = gpsRescueConfig()->throttleHover - 100;
+        }else if (secondsDoingNothing < 40) {
+            rescueThrottle = MIN(gpsRescueConfig()->throttleMin, 1100);
+        }else{
+            rescueThrottle = 1000;
+        }
         return;
      default:
         break;
@@ -415,7 +425,6 @@ static void performSanityChecks(void)
     static float prevTargetAltitudeCm = 0.0f; // to calculate ascent or descent target change
     static float previousDistanceToHomeCm = 0.0f; // to check that we are returning
     static int8_t secondsLowSats = 0; // Minimum sat detection
-    static int8_t secondsDoingNothing; // Limit on doing nothing
     const timeUs_t currentTimeUs = micros();
 
     if (rescueState.phase == RESCUE_IDLE) {
@@ -437,23 +446,29 @@ static void performSanityChecks(void)
     const bool hardFailsafe = !rxIsReceivingSignal();
 
     if (rescueState.failure != RESCUE_HEALTHY) {
-        // Default to 20s semi-controlled descent with impact detection, then abort
+        // Default to 20s semi-controlled descent with impact detection, then landing or abort
         rescueState.phase = RESCUE_DO_NOTHING;
 
         switch(gpsRescueConfig()->sanityChecks) {
         case RESCUE_SANITY_ON:
-            rescueState.phase = RESCUE_ABORT;
+            //semi controlled landing now
+            secondsDoingNothing = MAX(secondsDoingNothing,20);
+            rescueState.phase = RESCUE_DO_NOTHING;
             break;
         case RESCUE_SANITY_FS_ONLY:
             if (hardFailsafe) {
-                rescueState.phase = RESCUE_ABORT;
+                //semi controlled landing now
+                secondsDoingNothing = MAX(secondsDoingNothing,20);
+                rescueState.phase = RESCUE_DO_NOTHING;
             }
             break;
         default:
             // even with sanity checks off,
             // override when Allow Arming without Fix is enabled without GPS_FIX_HOME and no Control link available.
             if (gpsRescueConfig()->allowArmingWithoutFix && !STATE(GPS_FIX_HOME) && hardFailsafe) {
-                rescueState.phase = RESCUE_ABORT;
+                //semi controlled landing now
+                secondsDoingNothing = MAX(secondsDoingNothing,20);
+                rescueState.phase = RESCUE_DO_NOTHING;
             }
         }
     }
@@ -519,25 +534,27 @@ static void performSanityChecks(void)
     switch (rescueState.phase) {
     case RESCUE_LANDING:
         rescueState.intent.secondsFailing += ratio > 0.5f ? -1 : 1;
-        rescueState.intent.secondsFailing = constrain(rescueState.intent.secondsFailing, 0, 10);
-        if (rescueState.intent.secondsFailing >= 10) {
-            rescueState.phase = RESCUE_ABORT;
-            // Landing mode shouldn't take more than 10s
+        rescueState.intent.secondsFailing = constrain(rescueState.intent.secondsFailing, 0, 15);
+        if (rescueState.intent.secondsFailing >= 15) {
+            //landing now
+            secondsDoingNothing = MAX(secondsDoingNothing,50);
+            rescueState.phase = RESCUE_DO_NOTHING;
+            // Landing mode shouldn't take more than 15s
         }
         break;
     case RESCUE_ATTAIN_ALT:
     case RESCUE_DESCENT:
         rescueState.intent.secondsFailing += ratio > 0.5f ? -1 : 1;
-        rescueState.intent.secondsFailing = constrain(rescueState.intent.secondsFailing, 0, 10);
-        if (rescueState.intent.secondsFailing >= 10) {
+        rescueState.intent.secondsFailing = constrain(rescueState.intent.secondsFailing, 0, 30);
+        if (rescueState.intent.secondsFailing >= 30) {
             rescueState.phase = RESCUE_LANDING;
             rescueState.intent.secondsFailing = 0;
-            // if can't climb, or slow descending, enable impact detection and time out in 10s
+            // if can't climb, or slow descending, enable impact detection and time out in 30s
         }
         break;
     case RESCUE_DO_NOTHING:
-        secondsDoingNothing = MIN(secondsDoingNothing + 1, 20);
-        if (secondsDoingNothing >= 20) {
+        secondsDoingNothing = MIN(secondsDoingNothing + 1, 60);
+        if (secondsDoingNothing >= 60) {
             rescueState.phase = RESCUE_ABORT;
             // time-limited semi-controlled fall with impact detection
         }
