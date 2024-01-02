@@ -6,6 +6,8 @@ FEATURES       +=  VCP ONBOARDFLASH
 
 TARGET_SRC = \
             drivers/accgyro/accgyro_spi_mpu6000.c \
+            drivers/accgyro/accgyro_spi_mpu6500.c \
+            drivers/accgyro/accgyro_mpu6500.c\
             drivers/accgyro/accgyro_spi_icm426xx.c\
             drivers/barometer/barometer_bmp280.c \
             drivers/barometer/barometer_dps310.c\
@@ -21,7 +23,6 @@ TARGET_SRC = \
             drivers/accgyro/accgyro_spi_lsm6dso_init.c \
             drivers/accgyro/accgyro_spi_lsm6dso.c \
             drivers/accgyro/accgyro_spi_qmi8658_init.c \
-            drivers/accgyro/accgyro_spi_qmi8658.c \
             drivers/accgyro/accgyro_spi_icm20689.c\
             drivers/accgyro/accgyro_spi_bmi323_init.c\
             drivers/accgyro/accgyro_spi_bmi323.c\

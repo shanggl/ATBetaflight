@@ -6904,6 +6904,9 @@ void cliEnter(serialPort_t *serialPort)
 #else
     cliPrintLine("\r\nCLI");
 #endif
+    cliPrintLine("\r\nCaution: you are using Atbetaflight firmware. A Special Fork of Betaflight with a lot of optimize");
+    cliPrintLine("\r\nyou can get support from https://flightng.com or ask your dealer");
+    cliPrintLine("\r\nplease don't disturb betaflight~ ");
     setArmingDisabled(ARMING_DISABLED_CLI);
 
     cliPrompt();
