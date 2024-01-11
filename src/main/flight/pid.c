@@ -1000,8 +1000,15 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
             &currentPidSetpoint, &errorRate);
 #endif
 
+        static float lasterror[XYZ_AXIS_COUNT] = {0, 0, 0};
+        static float lasterror2[XYZ_AXIS_COUNT] = {0, 0, 0};
+
         const float previousIterm = pidData[axis].I;
-        float itermErrorRate = errorRate;
+        float itermErrorRate = 0.166666f * (lasterror2[axis] + 4 * lasterror[axis] + errorRate);
+
+        lasterror2[axis] = lasterror[axis];
+        lasterror[axis] = errorRate;
+
 #ifdef USE_ABSOLUTE_CONTROL
         float uncorrectedSetpoint = currentPidSetpoint;
 #endif
