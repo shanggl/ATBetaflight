@@ -18,8 +18,10 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "platform.h"
@@ -193,16 +195,9 @@ uint16_t getMotorAveragePeriod(void)
 #endif
 
 #if defined(USE_DSHOT_TELEMETRY)
-    if (useDshotTelemetry) {
-        uint16_t motors = getMotorCount();
-
-        if (motors > 0) {
-            for (int motor = 0; motor < motors; motor++) {
-                rpm += getDshotTelemetry(motor);
-            }
-            rpm = 100.0f / (motorConfig()->motorPoleCount / 2.0f) * rpm;  // convert erpm freq to RPM.
-            rpm /= motors;           // Average combined rpm
-        }
+    // Calculate this way when no rpm from esc data
+    if (useDshotTelemetry && rpm == 0) {
+        rpm = lrintf(getDshotAverageRpm());
     }
 #endif
 
@@ -249,7 +244,7 @@ bool srxlFrameRpm(sbuf_t *dst, timeUs_t currentTimeUs)
 static void GPStoDDDMM_MMMM(int32_t mwiigps, gpsCoordinateDDDMMmmmm_t *result)
 {
     int32_t absgps, deg, min;
-    absgps = ABS(mwiigps);
+    absgps = abs(mwiigps);
     deg = absgps / GPS_DEGREES_DIVIDER;
     absgps = (absgps - deg * GPS_DEGREES_DIVIDER) * 60;     // absgps = Minutes left * 10^7
     min = absgps / GPS_DEGREES_DIVIDER;                     // minutes left
@@ -302,7 +297,7 @@ bool srxlFrameGpsLoc(sbuf_t *dst, timeUs_t currentTimeUs)
     uint16_t altitudeLoBcd, groundCourseBcd, hdop;
     uint8_t hdopBcd, gpsFlags;
 
-    if (!featureIsEnabled(FEATURE_GPS) || !STATE(GPS_FIX) || gpsSol.numSat < 6) {
+    if (!featureIsEnabled(FEATURE_GPS) || !STATE(GPS_FIX) || gpsSol.numSat < GPS_MIN_SAT_COUNT) {
         return false;
     }
 
@@ -315,7 +310,7 @@ bool srxlFrameGpsLoc(sbuf_t *dst, timeUs_t currentTimeUs)
     longitudeBcd = (dec2bcd(coordinate.dddmm) << 16) | dec2bcd(coordinate.mmmm);
 
     // altitude (low order)
-    altitudeLo = ABS(gpsSol.llh.altCm) / 10;
+    altitudeLo = abs(gpsSol.llh.altCm) / 10;
     altitudeLoBcd = dec2bcd(altitudeLo % 100000);
 
     // Ground course
@@ -370,7 +365,7 @@ bool srxlFrameGpsStat(sbuf_t *dst, timeUs_t currentTimeUs)
     uint8_t numSatBcd, altitudeHighBcd;
     bool timeProvided = false;
 
-    if (!featureIsEnabled(FEATURE_GPS) || !STATE(GPS_FIX) || gpsSol.numSat < 6) {
+    if (!featureIsEnabled(FEATURE_GPS) || !STATE(GPS_FIX) || gpsSol.numSat < GPS_MIN_SAT_COUNT) {
         return false;
     }
 
@@ -468,7 +463,7 @@ bool srxlFrameFlightPackCurrent(sbuf_t *dst, timeUs_t currentTimeUs)
     return false;
 }
 
-#if defined (USE_SPEKTRUM_CMS_TELEMETRY) && defined (USE_CMS)
+#if defined(USE_SPEKTRUM_CMS_TELEMETRY) && defined(USE_CMS)
 
 // Betaflight CMS using Spektrum Tx telemetry TEXT_GEN sensor as display.
 
@@ -697,7 +692,7 @@ static bool srxlFrameVTX(sbuf_t *dst, timeUs_t currentTimeUs)
 #define SRXL_GPS_STAT_COUNT 0
 #endif
 
-#if defined (USE_SPEKTRUM_CMS_TELEMETRY) && defined (USE_CMS)
+#if defined(USE_SPEKTRUM_CMS_TELEMETRY) && defined(USE_CMS)
 #define SRXL_SCHEDULE_CMS_COUNT  1
 #else
 #define SRXL_SCHEDULE_CMS_COUNT  0
@@ -727,7 +722,7 @@ const srxlScheduleFnPtr srxlScheduleFuncs[SRXL_TOTAL_COUNT] = {
 #if defined(USE_SPEKTRUM_VTX_TELEMETRY) && defined(USE_SPEKTRUM_VTX_CONTROL) && defined(USE_VTX_COMMON)
     srxlFrameVTX,
 #endif
-#if defined (USE_SPEKTRUM_CMS_TELEMETRY) && defined (USE_CMS)
+#if defined(USE_SPEKTRUM_CMS_TELEMETRY) && defined(USE_CMS)
     srxlFrameText,
 #endif
 };
@@ -748,7 +743,7 @@ static void processSrxl(timeUs_t currentTimeUs)
         srxlFnPtr = srxlScheduleFuncs[srxlScheduleIndex + srxlScheduleUserIndex];
         srxlScheduleUserIndex = (srxlScheduleUserIndex + 1) % SRXL_SCHEDULE_USER_COUNT;
 
-#if defined (USE_SPEKTRUM_CMS_TELEMETRY) && defined (USE_CMS)
+#if defined(USE_SPEKTRUM_CMS_TELEMETRY) && defined(USE_CMS)
         // Boost CMS performance by sending nothing else but CMS Text frames when in a CMS menu.
         // Sideeffect, all other reports are still not sent if user leaves CMS without a proper EXIT.
         if (cmsInMenu &&

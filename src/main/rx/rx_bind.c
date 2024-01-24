@@ -24,11 +24,16 @@
 
 #include "rx/rx_spi_common.h"
 #include "rx/srxl2.h"
+#include "rx/crsf.h"
 
 #include "rx_bind.h"
 
 static bool doRxBind(bool doBind)
 {
+#if !defined(USE_SERIALRX_SRXL2) && !defined(USE_RX_FRSKY_SPI) && !defined(USE_RX_SFHSS_SPI) && !defined(USE_RX_FLYSKY) && !defined(USE_RX_SPEKTRUM) && !defined(USE_RX_EXPRESSLRS) && !defined(USE_SERIALRX_CRSF)
+    UNUSED(doBind);
+#endif
+
     switch (rxRuntimeState.rxProvider) {
     default:
         return false;
@@ -36,6 +41,14 @@ static bool doRxBind(bool doBind)
         switch (rxRuntimeState.serialrxProvider) {
         default:
             return false;
+#if defined(USE_SERIALRX_CRSF)
+        case SERIALRX_CRSF:
+            if (doBind) {
+                crsfRxBind();
+            }
+
+            break;
+#endif
 #if defined(USE_SERIALRX_SRXL2)
         case SERIALRX_SRXL2:
             if (doBind) {
