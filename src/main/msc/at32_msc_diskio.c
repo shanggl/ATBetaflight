@@ -13,81 +13,77 @@
 #include "at32_msc_diskio.h"
 #include "platform.h"
 
+#include "blackbox/blackbox.h"
+#include "pg/sdcard.h"
+
 #include "common/utils.h"
 #include "msc_bot_scsi.h"
 #include "drivers/usb_msc.h"
 
+#include "msc/usbd_storage.h"
+
+USBD_STORAGE_cb_TypeDef *USBD_STORAGE_fops;
 
 
-#define STORAGE_LUN_NBR 1
-#define SCSI_BLOCK_SIZE 512
-
-static const uint8_t scsi_inquiry[MSC_SUPPORT_MAX_LUN][SCSI_INQUIRY_DATA_LENGTH] =
-{
-  /* lun = 0 */
-  {
-    0x00,         /* peripheral device type (direct-access device) */
-    0x80,         /* removable media bit */
-    0x00,         /* ansi version, ecma version, iso version */
-    0x01,         /* respond data format */
-    SCSI_INQUIRY_DATA_LENGTH - 5, /* additional length */
-    0x00, 0x00, 0x00, /* reserved */
-	'B', 'E', 'T', 'A', 'F', 'L', 'T', ' ', // Manufacturer : 8 bytes
-	'O', 'n', 'b', 'o', 'a', 'r', 'd', ' ', // Product      : 16 Bytes
-	'F', 'l', 'a', 's', 'h', ' ', ' ', ' ', //
-	' ', ' ', ' ' ,' ',                     // Version      : 4 Bytes
+static USBD_STORAGE_cb_TypeDef *getDevice(){
+  if(USBD_STORAGE_fops!=0){
+    return USBD_STORAGE_fops;
   }
-};
-//
-//static const uint8_t STORAGE_Inquirydata[] =
-//{
-//    0x00, 0x80, 0x02, 0x02,
-//    (SCSI_INQUIRY_DATA_LENGTH - 5),
-//    0x00, 0x00, 0x00,
-//    'B', 'E', 'T', 'A', 'F', 'L', 'T', ' ', // Manufacturer : 8 bytes
-//    'O', 'n', 'b', 'o', 'a', 'r', 'd', ' ', // Product      : 16 Bytes
-//    'F', 'l', 'a', 's', 'h', ' ', ' ', ' ', //
-//    ' ', ' ', ' ' ,' ',                     // Version      : 4 Bytes
-//};
+  switch (blackboxConfig()->device) {
+  #ifdef USE_SDCARD
+      case BLACKBOX_DEVICE_SDCARD:
+          switch (sdcardConfig()->mode) {
+  #ifdef USE_SDCARD_SDIO
+          case SDCARD_MODE_SDIO:
+              USBD_STORAGE_fops = &USBD_MSC_MICRO_SDIO_fops;
+              break;
+  #endif
+  #ifdef USE_SDCARD_SPI
+          case SDCARD_MODE_SPI:
+              USBD_STORAGE_fops = &USBD_MSC_MICRO_SD_SPI_fops;
+              break;
+  #endif
+          default:;
+          }
+          break;
+  #endif
 
+  #ifdef USE_FLASHFS
+      case BLACKBOX_DEVICE_FLASH:
+          USBD_STORAGE_fops = &USBD_MSC_EMFAT_fops;
+          break;
+  #endif
+      default:;
+      }
+  if(USBD_STORAGE_fops){
+    USBD_STORAGE_fops->Init(0);
+  }
+  return USBD_STORAGE_fops;
+}
+
+
+
+static uint32_t last_block_size=512;
 usb_sts_type msc_disk_capacity(uint8_t lun, uint32_t *block_num, uint32_t *block_size)
 {
-    UNUSED(lun);
-    *block_size = SCSI_BLOCK_SIZE;
-    *block_num = emfat.disk_sectors;
+    getDevice()->GetCapacity(lun, block_num, block_size);
+    last_block_size = *block_size;
     return USB_OK;
 }
 
-/*
 
- if( ((USBD_StorageTypeDef *)pdev->pUserData)->Read(lun ,
-                              hmsc->bot_data,
-                              hmsc->scsi_blk_addr / hmsc->scsi_blk_size,
-                              len / hmsc->scsi_blk_size) < 0)
-
-static int8_t STORAGE_Read(
-    uint8_t lun,        // logical unit number
-    uint8_t *buf,       // Pointer to the buffer to save data
-    uint32_t blk_addr,  // address of 1st block to be read
-    uint16_t blk_len)   // nmber of blocks to be read
-{
-    UNUSED(lun);
-    mscSetActive();
-    emfat_read(&emfat, buf, blk_addr, blk_len);
-    return 0;
-}
-
-*/
 usb_sts_type msc_disk_read(
     uint8_t lun,        // logical unit number
     uint32_t blk_addr,  // address of 1st block to be read
     uint8_t *buf,       // Pointer to the buffer to save data
     uint32_t blk_len)   // nmber of blocks to be read
 {
-    UNUSED(lun);
-    mscSetActive();
-    emfat_read(&emfat, buf, blk_addr/SCSI_BLOCK_SIZE , blk_len/SCSI_BLOCK_SIZE);
-    return USB_OK;
+    int ret=getDevice()->Read(
+      lun,        // logical unit number
+      buf ,       // Pointer to the buffer to save data
+      blk_addr /last_block_size,  // address of 1st block to be read
+      blk_len/last_block_size);   // nmber of blocks to be read
+    return ret==0?USB_OK:USB_FAIL;
 }
 
 usb_sts_type msc_disk_write(uint8_t lun,
@@ -95,12 +91,12 @@ usb_sts_type msc_disk_write(uint8_t lun,
     uint8_t *buf,
     uint32_t blk_len)
 {
-    UNUSED(lun);
-    UNUSED(buf);
-    UNUSED(blk_addr);
-    UNUSED(blk_len);
-
-    return USB_FAIL;
+    int ret=getDevice()->Write(
+      lun,        // logical unit number
+      buf ,       // Pointer to the buffer to save data
+      blk_addr / last_block_size,  // address of 1st block to be read
+      blk_len / last_block_size);   // nmber of blocks to be read
+    return ret==0?USB_OK:USB_FAIL;
 }
 
 
@@ -112,7 +108,7 @@ usb_sts_type msc_disk_write(uint8_t lun,
 uint8_t * get_inquiry(uint8_t lun)
 {
   if(lun < MSC_SUPPORT_MAX_LUN)
-    return (uint8_t *)scsi_inquiry[lun];
+    return (uint8_t *)getDevice()->pInquiry;
   else
     return NULL;
 }

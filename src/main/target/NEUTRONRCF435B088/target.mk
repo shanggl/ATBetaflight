@@ -1,7 +1,7 @@
 AT32F43xxMT7_TARGETS += $(TARGET)
 
 CUSTOM_DEFAULTS_EXTENDED = yes
-FEATURES       +=  VCP ONBOARDFLASH
+FEATURES       +=  VCP ONBOARDFLASH SDCARD_SPI
 
 TARGET_SRC = \
             drivers/accgyro/accgyro_mpu6500.c \
@@ -35,5 +35,6 @@ TARGET_SRC = \
             drivers/rx/rx_sx1280.c \
             rx/expresslrs_telemetry.c \
             rx/expresslrs_common.c \
-            rx/expresslrs.c
+            rx/expresslrs.c \
+            msc/usbd_storage_sd_spi.c
 

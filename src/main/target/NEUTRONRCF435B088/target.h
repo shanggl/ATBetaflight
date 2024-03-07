@@ -86,6 +86,13 @@
 #define SPI3_NSS_PIN 			PD6 //confirm on lqfp64
 
 
+#define USE_SPI_DEVICE_4
+#define SPI4_SCK_PIN            PE2
+#define SPI4_MISO_PIN           PE5
+#define SPI4_MOSI_PIN           PE6
+#define SPI4_NSS_PIN 			PE4
+
+
 // *************** Gyro & ACC **********************
 
 /*#define USE_EXTI
@@ -128,15 +135,28 @@
 #define MAX7456_SPI_CS_PIN      SPI2_NSS_PIN
 
 /********************BLACKBOX***********************/
-#define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
+#define ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT
+#define USE_SDCARD
+#define USE_SDCARD_SPI
+//#define SDCARD_DETECT_INVERTED
+#define SDCARD_DETECT_PIN               PE3
+#define SDCARD_SPI_INSTANCE             SPI4
+#define SDCARD_SPI_CS_PIN               SPI4_NSS_PIN
+//#define SPI4_TX_DMA_OPT                         4
+
+// For variants with SDcard replaced with flash chip
+#define FLASH_CS_PIN            SDCARD_SPI_CS_PIN
+#define FLASH_SPI_INSTANCE      SDCARD_SPI_INSTANCE
+
+/*#define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
 #define USE_FLASHFS
 #define USE_FLASH_M25P16
 #define USE_FLASH_W25N01G          // 1Gb NAND flash support
 #define USE_FLASH_W25M             // Stacked die support
 #define USE_FLASH_W25M512          // 512Kb (256Kb x 2 stacked) NOR flash support
 #define USE_FLASH_W25M02G          // 2Gb (1Gb x 2 stacked) NAND flash support
-#define FLASH_SPI_INSTANCE      SPI3
-#define FLASH_CS_PIN            SPI3_NSS_PIN
+#define FLASH_SPI_INSTANCE      SPI4
+#define FLASH_CS_PIN            SPI4_NSS_PIN*/
 
 
 
@@ -215,7 +235,7 @@
 #define TARGET_IO_PORTB         0xffff
 #define TARGET_IO_PORTC         0xffff
 #define TARGET_IO_PORTD         0xffff
-#define TARGET_IO_PORTE         BIT(2)
+#define TARGET_IO_PORTE         0xffff
 
 #define USABLE_TIMER_CHANNEL_COUNT 28
 #define USED_TIMERS             ( TIM_N(1) | TIM_N(2) | TIM_N(3) | TIM_N(4) | TIM_N(5) | TIM_N(8) | TIM_N(20) )
