@@ -602,7 +602,7 @@ static uint32_t afatfs_sectorIndexInCluster(uint32_t byteOffset)
 }
 
 // Get the buffer memory for the cache entry of the given index.
-static uint8_t *afatfs_cacheSectorGetMemory(int cacheEntryIndex)
+inline static uint8_t *afatfs_cacheSectorGetMemory(int cacheEntryIndex)
 {
     return afatfs.cache + cacheEntryIndex * AFATFS_SECTOR_SIZE;
 }

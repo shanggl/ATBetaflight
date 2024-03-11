@@ -51,8 +51,8 @@
 /* Spec calls for under 400KHz */
 #define SDCARD_MAX_SPI_INIT_CLK_HZ     400000
 
-/* Operational speed <= 50MHz */
-#define SDCARD_MAX_SPI_CLK_HZ          50000000
+/* Operational speed <= 36MHz */
+#define SDCARD_MAX_SPI_CLK_HZ          36000000
 
 #define SDCARD_SPI_MODE                             SPI_MODE0_POL_LOW_EDGE_1ST
 //#define SDCARD_SPI_MODE                             SPI_MODE3_POL_HIGH_EDGE_2ND
