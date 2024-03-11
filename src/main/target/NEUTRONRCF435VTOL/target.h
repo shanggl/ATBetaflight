@@ -20,8 +20,8 @@
 
 #pragma once
 
-#define TARGET_BOARD_IDENTIFIER "NTR8"
-#define USBD_PRODUCT_STRING     "NEUTRONRC-F4-088"
+#define TARGET_BOARD_IDENTIFIER "NRVT"
+#define USBD_PRODUCT_STRING     "NEUTRONRC-F4-VTOL"
 /**********swd debuger reserved *****************
  *
  * pa13	swdio
