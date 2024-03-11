@@ -45,6 +45,7 @@
 #include "drivers/compass/compass.h"
 #include "drivers/sensor.h"
 #include "drivers/time.h"
+#include "drivers/dshot.h"
 
 #include "config/config.h"
 #include "fc/controlrate_profile.h"
@@ -506,7 +507,8 @@ void checkSmartPortTelemetryState(void)
 }
 
 #if defined(USE_MSP_OVER_TELEMETRY)
-static void smartPortSendMspResponse(uint8_t *data, const uint8_t dataSize) {
+static void smartPortSendMspResponse(uint8_t *data, const uint8_t dataSize)
+{
     smartPortPayload_t payload;
     payload.frameId = FSSP_MSPS_FRAME;
     memcpy(&payload.valueId, data, MIN(dataSize,SMARTPORT_MSP_PAYLOAD_SIZE));
@@ -656,7 +658,7 @@ void processSmartPortTelemetry(smartPortPayload_t *payload, volatile bool *clear
             case FSSP_DATAID_RPM        :
                 escData = getEscSensorData(ESC_SENSOR_COMBINED);
                 if (escData != NULL) {
-                    smartPortSendPackage(id, calcEscRpm(escData->rpm));
+                    smartPortSendPackage(id, lrintf(erpmToRpm(escData->rpm)));
                     *clearToSend = false;
                 }
                 break;
@@ -670,7 +672,7 @@ void processSmartPortTelemetry(smartPortPayload_t *payload, volatile bool *clear
             case FSSP_DATAID_RPM8       :
                 escData = getEscSensorData(id - FSSP_DATAID_RPM1);
                 if (escData != NULL) {
-                    smartPortSendPackage(id, calcEscRpm(escData->rpm));
+                    smartPortSendPackage(id, lrintf(erpmToRpm(escData->rpm)));
                     *clearToSend = false;
                 }
                 break;

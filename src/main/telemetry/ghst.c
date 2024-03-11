@@ -147,8 +147,8 @@ void ghstFrameGpsSecondaryTelemetry(sbuf_t *dst)
     sbufWriteU16(dst, gpsSol.groundSpeed);      // speed in 0.1m/s
     sbufWriteU16(dst, gpsSol.groundCourse);     // degrees * 10
     sbufWriteU8(dst, gpsSol.numSat);
-	
-    sbufWriteU16(dst, (uint16_t) (GPS_distanceToHome / 10));    // use units of 10m to increase range of U16 to 655.36km
+
+    sbufWriteU16(dst, GPS_distanceToHome / 10);    // use units of 10m to increase range of U16 to 655.36km
     sbufWriteU16(dst, GPS_directionToHome / 10);
 
     uint8_t gpsFlags = 0;
