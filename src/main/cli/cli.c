@@ -6282,8 +6282,9 @@ static void printConfig(const char *cmdName, char *cmdline, bool doDiff)
 #endif
 
             if ((dumpMask & (DUMP_ALL | DO_DIFF)) == (DUMP_ALL | DO_DIFF)) {
-                cliPrintHashLine("reset configuration to default settings");
-                cliPrintLine("defaults nosave");
+                //not implemented
+                //cliPrintHashLine("reset configuration to default settings");
+                //cliPrintLine("defaults nosave");
             }
         }
 

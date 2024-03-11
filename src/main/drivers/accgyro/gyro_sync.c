@@ -67,10 +67,15 @@ uint16_t gyroSetSampleRate(gyroDev_t *gyro)
             } else
 #endif
             {
-                gyro->gyroRateKHz = GYRO_RATE_3200_Hz;
-                gyroSampleRateHz = 3200;
+            gyro->gyroRateKHz = GYRO_RATE_3200_Hz;
+            gyroSampleRateHz = 3200;
             }
             accSampleRateHz = 800;
+            break;
+        case BMI_088_SPI:
+            gyro->gyroRateKHz = GYRO_RATE_8_kHz;
+            gyroSampleRateHz = 8000;
+            accSampleRateHz = 1600;
             break;
         case ICM_20649_SPI:
             gyro->gyroRateKHz = GYRO_RATE_9_kHz;
@@ -105,8 +110,8 @@ uint16_t gyroSetSampleRate(gyroDev_t *gyro)
             accSampleRateHz = 896;
             break;
         case BMI_323_SPI:
-            gyro->gyroRateKHz = GYRO_RATE_3200_Hz;
-            gyroSampleRateHz = 3200;
+            gyro->gyroRateKHz = GYRO_RATE_8_kHz;
+            gyroSampleRateHz = 8000;
             accSampleRateHz = 800;
             break;
 
@@ -116,6 +121,11 @@ uint16_t gyroSetSampleRate(gyroDev_t *gyro)
             accSampleRateHz = 1000;
             break;
     }
+
+#if !defined(USE_GYRO_EXTI) || !defined(GYRO_1_EXTI_PIN)
+            gyro->gyroRateKHz = GYRO_RATE_8_kHz;
+            gyroSampleRateHz = 8000;
+#endif
 
     gyro->mpuDividerDrops  = 0; // we no longer use the gyro's sample divider
     gyro->accSampleRateHz = accSampleRateHz;

@@ -677,8 +677,10 @@ void blackboxReplenishHeaderBudget(void)
         break;
 #endif
 #ifdef USE_SDCARD
-    case BLACKBOX_DEVICE_SDCARD:
-        freeSpace = afatfs_getFreeBufferSpace();
+    case BLACKBOX_DEVICE_SDCARD:        
+        //freeSpace = afatfs_getFreeBufferSpace();
+        blackboxHeaderBudget =  BLACKBOX_MAX_ACCUMULATED_HEADER_BUDGET;
+        return;
         break;
 #endif
     default:

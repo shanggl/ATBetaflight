@@ -33,6 +33,37 @@
 #endif
 
 
+/** @defgroup USBD_MEM_Exported_Defines
+  * @{
+  */
+#define USBD_STD_INQUIRY_LENGTH     36
+/**
+  * @}
+  */
+
+
+/** @defgroup USBD_MEM_Exported_TypesDefinitions
+  * @{
+  */
+
+typedef struct _USBD_STORAGE
+{
+  int8_t (* Init) (uint8_t lun);
+  int8_t (* GetCapacity) (uint8_t lun, uint32_t *block_num, uint32_t *block_size);
+  int8_t (* IsReady) (uint8_t lun);
+  int8_t (* IsWriteProtected) (uint8_t lun);
+  int8_t (* Read) (uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len);
+  int8_t (* Write)(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len);
+  int8_t (* GetMaxLun)(void);
+  int8_t *pInquiry;
+
+} USBD_STORAGE_cb_TypeDef;
+
+/** @defgroup USBD_MEM_Exported_FunctionsPrototype
+  * @{
+  */
+extern USBD_STORAGE_cb_TypeDef *USBD_STORAGE_fops;
+
 
 #include "common/time.h"
 
@@ -48,7 +79,16 @@ extern USBD_StorageTypeDef USBD_MSC_MICRO_SD_SPI_fops;
 extern USBD_StorageTypeDef USBD_MSC_EMFAT_fops;
 #endif
 #elif defined(USE_ATBSP_DRIVER)
-
+extern USBD_STORAGE_cb_TypeDef *USBD_STORAGE_fops;
+#ifdef USE_SDCARD_SDIO
+extern USBD_STORAGE_cb_TypeDef USBD_MSC_MICRO_SDIO_fops;
+#endif
+#ifdef USE_SDCARD_SPI
+extern USBD_STORAGE_cb_TypeDef USBD_MSC_MICRO_SD_SPI_fops;
+#endif
+#ifdef USE_FLASHFS
+extern USBD_STORAGE_cb_TypeDef USBD_MSC_EMFAT_fops;
+#endif
 #else // USE_HAL_DRIVER
 extern USBD_STORAGE_cb_TypeDef *USBD_STORAGE_fops;
 #ifdef USE_SDCARD_SDIO
