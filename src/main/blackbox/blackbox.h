@@ -55,6 +55,7 @@ typedef enum FlightLogEvent {
     FLIGHT_LOG_EVENT_LOGGING_RESUME = 14,
     FLIGHT_LOG_EVENT_DISARM = 15,
     FLIGHT_LOG_EVENT_FLIGHTMODE = 30, // Add new event type for flight mode status.
+    FLIGHT_LOG_EVENT_MOTOR_STATE = 50,
     FLIGHT_LOG_EVENT_LOG_END = 255
 } FlightLogEvent;
 
