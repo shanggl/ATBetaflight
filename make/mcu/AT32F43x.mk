@@ -115,6 +115,7 @@ MSC_SRC = \
 			$(ROOT)/lib/main/AT32F43x/usbd_class/msc/msc_bot_scsi.c\
             drivers/usb_msc_common.c \
             drivers/usb_msc_at32f43x.c \
+            msc/at32_msc_diskio.c
             
 EXCLUDES +=\
 			drivers/msc/usbd_storage.c\
@@ -123,10 +124,10 @@ EXCLUDES +=\
 			dirvers/msc/usbd_storage_sd_spi.c\
 			
 
-#ifneq ($(filter SDCARD_SPI,$(FEATURES)),)
-#MSC_SRC += \
-#            msc/usbd_storage_sd_spi.c
-#endif
+ifneq ($(filter SDCARD_SPI,$(FEATURES)),)
+MSC_SRC += \
+            msc/usbd_storage_sd_spi.c
+endif
 #
 #ifneq ($(filter SDCARD_SDIO,$(FEATURES)),)
 #MSC_SRC += \
@@ -137,9 +138,9 @@ EXCLUDES +=\
 
 ifneq ($(filter ONBOARDFLASH,$(FEATURES)),)
 MSC_SRC += \
-            msc/at32_msc_diskio.c \
             msc/emfat.c \
-            msc/emfat_file.c
+            msc/emfat_file.c\
+            msc/usbd_storage_emfat.c 
 endif 
 
 DSP_LIB :=
