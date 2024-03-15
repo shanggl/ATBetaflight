@@ -155,6 +155,12 @@ typedef struct flightLogEvent_loggingResume_s {
     uint32_t currentTime;
 } flightLogEvent_loggingResume_t;
 
+typedef struct flightLogEvent_motorState_s {
+    uint8_t index;
+    uint8_t state;
+} flightLogEvent_motorState_t;
+
+
 #define FLIGHT_LOG_EVENT_INFLIGHT_ADJUSTMENT_FUNCTION_FLOAT_VALUE_FLAG 128
 
 typedef union flightLogEventData_u {
@@ -163,6 +169,7 @@ typedef union flightLogEventData_u {
     flightLogEvent_disarm_t disarm;
     flightLogEvent_inflightAdjustment_t inflightAdjustment;
     flightLogEvent_loggingResume_t loggingResume;
+    flightLogEvent_motorState_t motorState;
 } flightLogEventData_t;
 
 typedef struct flightLogEvent_s {

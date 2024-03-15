@@ -47,6 +47,9 @@
 #include "rx/rx.h"
 #include "dshot.h"
 
+#include "blackbox/blackbox.h"
+#include "blackbox/blackbox_fielddefs.h"
+
 void dshotInitEndpoints(const motorConfig_t *motorConfig, float outputLimit, float *outputLow, float *outputHigh, float *disarm, float *deadbandMotor3dHigh, float *deadbandMotor3dLow)
 {
     float outputLimitOffset = DSHOT_RANGE * (1 - outputLimit);
@@ -255,6 +258,15 @@ static void dshotUpdateTelemetryData(uint8_t motorIndex, dshotTelemetryType_t ty
     if ((type == DSHOT_TELEMETRY_TYPE_TEMPERATURE) && (value > dshotTelemetryState.motorState[motorIndex].maxTemp)) {
         dshotTelemetryState.motorState[motorIndex].maxTemp = value;
     }
+
+#ifdef USE_BLACKBOX
+    if ((type == DSHOT_TELEMETRY_TYPE_STATE_EVENTS) ) {
+        flightLogEvent_motorState_t eventData;
+        eventData.index = motorIndex;
+        eventData.state = value;
+        blackboxLogEvent(FLIGHT_LOG_EVENT_MOTOR_STATE, (flightLogEventData_t*)&eventData);
+    }
+#endif
 }
 
 uint16_t getDshotTelemetry(uint8_t index)

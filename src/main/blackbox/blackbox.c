@@ -512,7 +512,7 @@ static void blackboxBuildConditionCache(void)
     }
 }
 
-static bool testBlackboxCondition(FlightLogFieldCondition condition)
+inline static bool testBlackboxCondition(FlightLogFieldCondition condition)
 {
     return (blackboxConditionCache & (1 << condition)) != 0;
 }
@@ -1580,6 +1580,10 @@ void blackboxLogEvent(FlightLogEvent event, flightLogEventData_t *data)
         blackboxWriteUnsignedVB(data->loggingResume.logIteration);
         blackboxWriteUnsignedVB(data->loggingResume.currentTime);
         break;
+    case FLIGHT_LOG_EVENT_MOTOR_STATE:
+        blackboxWrite(data->motorState.index);
+        blackboxWrite(data->motorState.state);
+        break;        
     case FLIGHT_LOG_EVENT_LOG_END:
         blackboxWriteString("End of log");
         blackboxWrite(0);

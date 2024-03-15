@@ -128,6 +128,9 @@ uint8_t bmi088Detect(const extDevice_t *dev)
         }
     }
     accCsPin = IOGetByTag(IO_TAG(ACC_1_CS_PIN));
+    if(!accCsPin){
+        return MPU_NONE;
+    }
 
     IOInit(accCsPin, OWNER_GYRO_CS, 6);
     IOConfigGPIO(accCsPin, SPI_IO_CS_CFG);
@@ -144,6 +147,7 @@ uint8_t bmi088Detect(const extDevice_t *dev)
         }
     }
 
+    IORelease(accCsPin);
     return MPU_NONE;
 }
 
