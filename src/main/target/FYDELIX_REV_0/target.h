@@ -20,8 +20,8 @@
 
 #pragma once
 
-#define TARGET_BOARD_IDENTIFIER "NRVT"
-#define USBD_PRODUCT_STRING     "NEUTRONRC-F4-VTOL"
+#define TARGET_BOARD_IDENTIFIER "FY"
+#define USBD_PRODUCT_STRING     "FYDELIX_PROTO"
 /**********swd debuger reserved *****************
  *
  * pa13	swdio
@@ -70,21 +70,6 @@
 #define SPI1_MOSI_PIN           PA7
 #define SPI1_NSS_PIN            PA4
 
-//NOT USE ON AT-START BOARD ! -->OTG2
-#define USE_SPI_DEVICE_2
-#define SPI2_SCK_PIN            PD1//PB13 on LQFP64
-#define SPI2_MISO_PIN           PD3//PB14 on LQFP64
-#define SPI2_MOSI_PIN           PD4//PB15 on LQFP64
-#define SPI2_NSS_PIN            PD5 //confirm on lqfp64
-
-
-
-#define USE_SPI_DEVICE_3
-#define SPI3_SCK_PIN            PC10
-#define SPI3_MISO_PIN           PC11
-#define SPI3_MOSI_PIN           PC12
-#define SPI3_NSS_PIN 			PD6 //confirm on lqfp64
-
 
 #define USE_SPI_DEVICE_4
 #define SPI4_SCK_PIN            PE2
@@ -95,26 +80,16 @@
 
 // *************** Gyro & ACC **********************
 
-/*#define USE_EXTI
+#define USE_EXTI
 #define USE_GYRO_EXTI
 #define GYRO_1_EXTI_PIN        PA15
 #define USE_MPU_DATA_READY_SIGNAL
 #define ENSURE_MPU_DATA_READY_IS_LOW
-*/
 
-// #define GYRO_1_CS_PIN          PC14
-// #define GYRO_1_SPI_INSTANCE    SPI1
-// #define GYRO_1_ALIGN           CW180_DEG
-
-// #define GYRO_2_SPI_INSTANCE     SPI3
-// #define GYRO_2_CS_PIN           SPI3_NSS_PIN        
-// #define GYRO_2_EXTI_PIN         NONE
-// #define GYRO_2_ALIGN            CW0_DEG
-
-#define GYRO_1_CS_PIN          SPI3_NSS_PIN
-#define GYRO_1_SPI_INSTANCE    SPI3
+#define USE_GYRO_EXTI
+#define GYRO_1_CS_PIN          SPI1_NSS_PIN
+#define GYRO_1_SPI_INSTANCE    SPI1
 #define GYRO_1_ALIGN           CW180_DEG
-#define GYRO_1_EXTI_PIN         NONE
 
 
 #define USE_GYRO
@@ -129,29 +104,25 @@
 
 #define USE_ACC
 #define USE_ACC_SPI_ICM42688P
-// #define ACC_1_CS_PIN SPI1_NSS_PIN
 
-//#define GYRO_CONFIG_USE_GYRO_DEFAULT GYRO_CONFIG_USE_GYRO_1
+#define GYRO_CONFIG_USE_GYRO_DEFAULT GYRO_CONFIG_USE_GYRO_1
 
 // *************** OSD *****************************
 //USE SPI3 ON AT-START BOARD ,USE SPI2 ON LQFP64
-#define USE_MAX7456
-#define MAX7456_SPI_INSTANCE    SPI2
-#define MAX7456_SPI_CS_PIN      SPI2_NSS_PIN
 
 /********************BLACKBOX***********************/
-#define ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT
-#define USE_SDCARD
-#define USE_SDCARD_SPI
+// #define ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT
+// #define USE_SDCARD
+// #define USE_SDCARD_SPI
 //#define SDCARD_DETECT_INVERTED
-#define SDCARD_DETECT_PIN               PE3
-#define SDCARD_SPI_INSTANCE             SPI4
-#define SDCARD_SPI_CS_PIN               SPI4_NSS_PIN
+// #define SDCARD_DETECT_PIN               PE3
+// #define SDCARD_SPI_INSTANCE             SPI4
+// #define SDCARD_SPI_CS_PIN               SPI4_NSS_PIN
 //#define SPI4_TX_DMA_OPT                         4
 
 // For variants with SDcard replaced with flash chip
-#define FLASH_CS_PIN            SDCARD_SPI_CS_PIN
-#define FLASH_SPI_INSTANCE      SDCARD_SPI_INSTANCE
+// #define FLASH_CS_PIN            SDCARD_SPI_CS_PIN
+// #define FLASH_SPI_INSTANCE      SDCARD_SPI_INSTANCE
 
 /*#define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
 #define USE_FLASHFS
@@ -216,7 +187,7 @@
 #define SERIAL_PORT_COUNT       6 // VCP  UART1 UART2 UART3 UART4 UART5
 
 #define DEFAULT_RX_FEATURE      FEATURE_RX_SERIAL
-#define SERIALRX_PROVIDER       SERIALRX_SBUS
+#define SERIALRX_PROVIDER       SERIALRX_CRSF
 #define SERIALRX_UART           SERIAL_PORT_USART1
 
 
