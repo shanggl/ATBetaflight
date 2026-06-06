@@ -56,6 +56,8 @@
 #include "drivers/accgyro/accgyro_spi_mpu6500.h"
 #include "drivers/accgyro/accgyro_spi_mpu9250.h"
 #include "drivers/accgyro/accgyro_spi_qmi8658.h"
+#include "drivers/accgyro/accgyro_spi_sc7i22.h"
+#include "drivers/accgyro/accgyro_spi_sc7u22.h"
 #include "drivers/accgyro/accgyro_spi_sh3001.h"
 #include "drivers/accgyro/accgyro_spi_bmi323.h"
 
@@ -362,6 +364,24 @@ retry:
     case ACC_QMI8658:
         if (qmi8658SpiAccDetect(dev)) {
             accHardware = ACC_QMI8658;
+            break;
+        }
+        FALLTHROUGH;
+#endif
+
+#ifdef USE_ACCGYRO_SC7I22
+    case ACC_SC7I22:
+        if (sc7i22SpiAccDetect(dev)) {
+            accHardware = ACC_SC7I22;
+            break;
+        }
+        FALLTHROUGH;
+#endif
+
+#ifdef USE_ACCGYRO_SC7U22
+    case ACC_SC7U22:
+        if (sc7u22SpiAccDetect(dev)) {
+            accHardware = ACC_SC7U22;
             break;
         }
         FALLTHROUGH;

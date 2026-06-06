@@ -114,6 +114,12 @@ uint16_t gyroSetSampleRate(gyroDev_t *gyro)
             gyroSampleRateHz = 8000;
             accSampleRateHz = 800;
             break;
+        case SC7I22_SPI:
+        case SC7U22_SPI:
+            gyro->gyroRateKHz = GYRO_RATE_3200_Hz;
+            gyroSampleRateHz = 3200;
+            accSampleRateHz = 800;
+            break;
 
         default:
             gyro->gyroRateKHz = GYRO_RATE_8_kHz;
