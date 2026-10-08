@@ -20,8 +20,8 @@
 
 #pragma once
 
-#define TARGET_BOARD_IDENTIFIER "NRVT"
-#define USBD_PRODUCT_STRING     "NEUTRONRC-F4-VTOL"
+#define TARGET_BOARD_IDENTIFIER "GMRC"
+#define USBD_PRODUCT_STRING     "GREAT-MOUNTAIN-F4SE"
 /**********swd debuger reserved *****************
  *
  * pa13	swdio
@@ -32,31 +32,24 @@
  *
  * other pin
  *
- * PB2 ->BOOT0 button
+ * BOOT0 button
  * PA8  MCO1
  * PA12 OTG1 D+ DP
- * PA11 OTG1 D- DN
+ * PA11 OTG1 D- DM
  * PH0 HEXT IN
  * PH1 HEXT OUT
  */
 #define SYSTEM_HSE_MHZ        8
-//buttons
-/*#define USE_BUTTONS
-#define BUTTON_A_PIN            PD2
-#define BUTTON_A_PIN_INVERTED // Active high
-#define BUTTON_B_PIN            PC14 
-#define BUTTON_B_PIN_INVERTED // Active high
-*/
+//No Buttons
 
-#define LED0_PIN                PD14 
-#define LED1_PIN                PD15 
-
-
+//LEDS
+#define LED0_PIN                PC4 //confirm on LQFP64
 
 #define USE_BEEPER
-#define BEEPER_PIN              PC13
+#define BEEPER_PIN              PC15
 #define BEEPER_INVERTED		 //低电平触发
-// #define BEEPER_PWM_HZ	2500 //0  有源bb响 | 2500Hz 无源bb响，PWM驱动
+
+//ESC Protocol
 
 #define ENABLE_DSHOT_DMAR       DSHOT_DMAR_AUTO
 #define DSHOT_BITBANG_DEFAULT   DSHOT_BITBANG_AUTO
@@ -68,72 +61,48 @@
 #define SPI1_SCK_PIN            PA5
 #define SPI1_MISO_PIN           PA6
 #define SPI1_MOSI_PIN           PA7
-#define SPI1_NSS_PIN            PA4
+#define SPI1_NSS_PIN            PA15
 
-//NOT USE ON AT-START BOARD ! -->OTG2
 #define USE_SPI_DEVICE_2
-#define SPI2_SCK_PIN            PD1//PB13 on LQFP64
-#define SPI2_MISO_PIN           PD3//PB14 on LQFP64
-#define SPI2_MOSI_PIN           PD4//PB15 on LQFP64
-#define SPI2_NSS_PIN            PD5 //confirm on lqfp64
-
-
+#define SPI2_SCK_PIN            PB13
+#define SPI2_MISO_PIN           PB14
+#define SPI2_MOSI_PIN           PB15
+#define SPI2_NSS_PIN            PB12
 
 #define USE_SPI_DEVICE_3
-#define SPI3_SCK_PIN            PC10
-#define SPI3_MISO_PIN           PC11
-#define SPI3_MOSI_PIN           PC12
-#define SPI3_NSS_PIN 			PD6 //confirm on lqfp64
-
-
-#define USE_SPI_DEVICE_4
-#define SPI4_SCK_PIN            PE2
-#define SPI4_MISO_PIN           PE5
-#define SPI4_MOSI_PIN           PE6
-#define SPI4_NSS_PIN 			PE4
-
+#define SPI3_SCK_PIN            PB3
+#define SPI3_MISO_PIN           PB4
+#define SPI3_MOSI_PIN           PB5
+#define SPI3_NSS_PIN 			PB9
 
 // *************** Gyro & ACC **********************
 
-/*#define USE_EXTI
+#define USE_EXTI
 #define USE_GYRO_EXTI
-#define GYRO_1_EXTI_PIN        PA15
+#define GYRO_1_EXTI_PIN        PA8
 #define USE_MPU_DATA_READY_SIGNAL
 #define ENSURE_MPU_DATA_READY_IS_LOW
-*/
 
-// #define GYRO_1_CS_PIN          PC14
-// #define GYRO_1_SPI_INSTANCE    SPI1
-// #define GYRO_1_ALIGN           CW180_DEG
-
-// #define GYRO_2_SPI_INSTANCE     SPI3
-// #define GYRO_2_CS_PIN           SPI3_NSS_PIN        
-// #define GYRO_2_EXTI_PIN         NONE
-// #define GYRO_2_ALIGN            CW0_DEG
-
-#define GYRO_1_CS_PIN          SPI3_NSS_PIN
-#define GYRO_1_SPI_INSTANCE    SPI3
+#define GYRO_1_CS_PIN          SPI1_NSS_PIN
+#define GYRO_1_SPI_INSTANCE    SPI1
 #define GYRO_1_ALIGN           CW180_DEG
-#define GYRO_1_EXTI_PIN         NONE
 
 
 #define USE_GYRO
+// #define USE_GYRO_SPI_MPU6500  //debug only
+// #define USE_ACC_SPI_MPU6500		//debug only
 #define USE_GYRO_SPI_ICM42688P
 #define USE_ACCGYRO_BMI270
 #define USE_ACCGYRO_ASM330LHH
-#define USE_ACCGYRO_LSM6DSL
-#define USE_ACCGYRO_LSM6DSO
+#define USE_ACCGYRO_BMI323
+#define USE_GYRO_SPI_ICM20689
+#define USE_ACC_SPI_ICM20689
+#define USE_ACCGYRO_QMI8658
 #define USE_ACCGYRO_SC7I22
 #define USE_ACCGYRO_SC7U22
-// #define USE_ACCGYRO_BMI088
-
-
-
 #define USE_ACC
 #define USE_ACC_SPI_ICM42688P
-// #define ACC_1_CS_PIN SPI1_NSS_PIN
 
-//#define GYRO_CONFIG_USE_GYRO_DEFAULT GYRO_CONFIG_USE_GYRO_1
 
 // *************** OSD *****************************
 //USE SPI3 ON AT-START BOARD ,USE SPI2 ON LQFP64
@@ -142,55 +111,39 @@
 #define MAX7456_SPI_CS_PIN      SPI2_NSS_PIN
 
 /********************BLACKBOX***********************/
-#define ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT
-#define USE_SDCARD
-#define USE_SDCARD_SPI
-//#define SDCARD_DETECT_INVERTED
-#define SDCARD_DETECT_PIN               PE3
-#define SDCARD_SPI_INSTANCE             SPI4
-#define SDCARD_SPI_CS_PIN               SPI4_NSS_PIN
-//#define SPI4_TX_DMA_OPT                         4
-
-// For variants with SDcard replaced with flash chip
-#define FLASH_CS_PIN            SDCARD_SPI_CS_PIN
-#define FLASH_SPI_INSTANCE      SDCARD_SPI_INSTANCE
-
-/*#define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
+#define DEFAULT_BLACKBOX_DEVICE BLACKBOX_DEVICE_FLASH
 #define USE_FLASHFS
 #define USE_FLASH_M25P16
 #define USE_FLASH_W25N01G          // 1Gb NAND flash support
 #define USE_FLASH_W25M             // Stacked die support
 #define USE_FLASH_W25M512          // 512Kb (256Kb x 2 stacked) NOR flash support
 #define USE_FLASH_W25M02G          // 2Gb (1Gb x 2 stacked) NAND flash support
-#define FLASH_SPI_INSTANCE      SPI4
-#define FLASH_CS_PIN            SPI4_NSS_PIN*/
+#define FLASH_SPI_INSTANCE      SPI3
+#define FLASH_CS_PIN            SPI3_NSS_PIN
 
 
 
 // *************** Baro **************************
 #define USE_I2C
-#define USE_I2C_DEVICE_3
-#define I2C_DEVICE              (I2CDEV_3)
-#define I2C3_SCL                PC0        // SCL pad
-#define I2C3_SDA                PC1        // SDA pad
+#define USE_I2C_DEVICE_2
+#define I2C_DEVICE              (I2CDEV_2)
+#define I2C2_SCL                PB10        // SCL pad
+#define I2C2_SDA                PB11        // SDA pad
 #define USE_I2C_PULLUP
 
 #define USE_BARO
 #define USE_BARO_BMP280
 #define USE_BARO_DPS310
-#define BARO_I2C_INSTANCE       (I2CDEV_3)
+#define BARO_I2C_INSTANCE       (I2CDEV_2)
 
 #define USE_MAG
 #define USE_MAG_HMC5883
 #define USE_MAG_QMC5883
-#define MAG_I2C_INSTANCE        (I2CDEV_3)
+#define MAG_I2C_INSTANCE        (I2CDEV_2)
 
-//#define USE_BARO_MS5611
 
-// *************** UART *****************************
+// *************** UART & Serial ******************
 #define USE_VCP
-#define USB_DETECT_PIN          PC15 //可以悬空忽略
-#define USE_USB_DETECT
 
 #define USE_UART1
 #define UART1_RX_PIN            PA10
@@ -200,17 +153,18 @@
 #define UART2_RX_PIN            PA3
 #define UART2_TX_PIN            PA2
 
+//uart3 与i2c 复用，如果启用uart3 需要关闭i2c 的所有设备
 #define USE_UART3
-#define UART3_RX_PIN            PC5
-#define UART3_TX_PIN            PC4
+#define UART3_RX_PIN            PB11
+#define UART3_TX_PIN            PB10
 
 #define USE_UART4
-#define UART4_RX_PIN            PA1
-#define UART4_TX_PIN            PA0
+#define UART4_RX_PIN            PC11
+#define UART4_TX_PIN            PC10
 
-#define USE_UART8
-#define UART8_RX_PIN            PC3
-#define UART8_TX_PIN            PC2
+#define USE_UART5
+#define UART5_RX_PIN            PD2
+#define UART5_TX_PIN            PC12
 
 //#define USE_SOFTSERIAL1
 //#define USE_SOFTSERIAL2
@@ -218,8 +172,8 @@
 #define SERIAL_PORT_COUNT       6 // VCP  UART1 UART2 UART3 UART4 UART5
 
 #define DEFAULT_RX_FEATURE      FEATURE_RX_SERIAL
-#define SERIALRX_PROVIDER       SERIALRX_SBUS
-#define SERIALRX_UART           SERIAL_PORT_USART1
+#define SERIALRX_PROVIDER       SERIALRX_CRSF
+#define SERIALRX_UART           SERIAL_PORT_USART2
 
 
 
@@ -228,13 +182,13 @@
 #define ADC_INSTANCE         ADC1  // Default added
 #define ADC1_DMA_OPT            11  //DMA 2 CH 5
 
-#define VBAT_ADC_PIN            PB0
-#define CURRENT_METER_ADC_PIN   PB1
+#define VBAT_ADC_PIN            PC2
+#define CURRENT_METER_ADC_PIN   PC1
 //#define RSSI_ADC_PIN            0
 
 #define USE_ESCSERIAL
 
-#define DEFAULT_FEATURES                (FEATURE_OSD | FEATURE_TELEMETRY | FEATURE_SOFTSERIAL |FEATURE_LED_STRIP )
+#define DEFAULT_FEATURES                (FEATURE_OSD | FEATURE_TELEMETRY | FEATURE_SOFTSERIAL | FEATURE_LED_STRIP  | FEATURE_CHANNEL_FORWARDING )
 #define DEFAULT_VOLTAGE_METER_SOURCE    VOLTAGE_METER_ADC
 #define DEFAULT_CURRENT_METER_SOURCE    CURRENT_METER_ADC
 
@@ -242,7 +196,8 @@
 #define TARGET_IO_PORTB         0xffff
 #define TARGET_IO_PORTC         0xffff
 #define TARGET_IO_PORTD         0xffff
-#define TARGET_IO_PORTE         0xffff
+#define TARGET_IO_PORTE         BIT(2)
+#define TARGET_IO_PORTH         BIT(1)|BIT(2)|BIT(3)
 
 #define USABLE_TIMER_CHANNEL_COUNT 28
 #define USED_TIMERS             ( TIM_N(1) | TIM_N(2) | TIM_N(3) | TIM_N(4) | TIM_N(5) | TIM_N(8) | TIM_N(20) )

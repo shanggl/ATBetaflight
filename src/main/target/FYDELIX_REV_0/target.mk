@@ -1,7 +1,7 @@
 AT32F43xxMT7_TARGETS += $(TARGET)
 
 CUSTOM_DEFAULTS_EXTENDED = yes
-FEATURES       +=  VCP ONBOARDFLASH
+FEATURES       +=  VCP SDCARD_SPI
 
 TARGET_SRC = \
             drivers/accgyro/accgyro_mpu6500.c \
@@ -15,6 +15,7 @@ TARGET_SRC = \
             $(ROOT)/lib/main/BoschSensortec/BMI270-Sensor-API/bmi270.c \
             drivers/accgyro/accgyro_spi_bmi270_init.c \
             drivers/accgyro/accgyro_spi_bmi270.c\
+            drivers/accgyro/accgyro_spi_bmi088.c \
             drivers/accgyro/accgyro_spi_asm330lhh_init.c \
             drivers/accgyro/accgyro_spi_asm330lhh.c \
             drivers/accgyro/accgyro_spi_lsm6dsl_init.c \
@@ -23,10 +24,6 @@ TARGET_SRC = \
             drivers/accgyro/accgyro_spi_lsm6dso.c \
             drivers/accgyro/accgyro_spi_qmi8658_init.c \
             drivers/accgyro/accgyro_spi_qmi8658.c \
-            drivers/accgyro/accgyro_spi_sc7i22_init.c \
-            drivers/accgyro/accgyro_spi_sc7i22.c \
-            drivers/accgyro/accgyro_spi_sc7u22_init.c \
-            drivers/accgyro/accgyro_spi_sc7u22.c \
             drivers/accgyro/accgyro_spi_sh3001_init.c \
             drivers/accgyro/accgyro_spi_sh3001.c \
             drivers/max7456.c \
